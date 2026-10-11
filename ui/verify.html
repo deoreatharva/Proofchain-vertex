@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ProofChain Standalone Verifier — In-browser WebCrypto document verification with diagnostic stepper and hash inspection panel.">
+  <title>Standalone Verifier — ProofChain</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+
+    <nav class="top-nav">
+      <a href="index.html" class="nav-logo">PROOFCHAIN</a>
+      <ul class="nav-links">
+        <li><a href="register.html">Register</a></li>
+        <li><a href="batches.html">Batches</a></li>
+        <li><a href="verify.html" class="active">Verify</a></li>
+        <li><a href="audit.html">Audit</a></li>
+      </ul>
+    </nav>
+
+    <main class="main-content">
+      <h1 class="page-title">Standalone Verifier</h1>
+      <p class="page-subtitle">Client-side document and proof verification executed directly in your browser using the WebCrypto API. Operates independently of database connections or network requests.</p>
+
+      <!-- Input Form: 3 Independent Dropzones / Inputs -->
+      <div class="card">
+        <div class="card-header">
+          <h2>Input 1: Document Input</h2>
+          <span style="font-size: 0.74rem; color: var(--color-secondary);">Raw File Upload or Direct Text</span>
+        </div>
+        <div class="dropzone" id="docDropzone">
+          <p class="dropzone-text"><strong>Select or drop original document</strong></p>
+          <p class="dropzone-hint">Upload the exact binary file originally registered</p>
+          <input type="file" id="docFileInput" style="display: none;">
+        </div>
+        <div id="docFileInfo" style="display: none; margin-top: 10px; padding: 8px 12px; background: var(--color-muted); border-radius: var(--radius); font-size: 0.8rem;">
+          <strong>File:</strong> <span id="docFileName" class="mono"></span>
+        </div>
+        <div class="form-group" style="margin-top: 14px; margin-bottom: 0;">
+          <label class="form-label" for="docTextInput">Or Provide Direct Raw Document Text</label>
+          <textarea class="form-textarea mono" id="docTextInput" placeholder="Paste raw text payload if document was registered via utf8-nfc or plain text..."></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Input 2: Proof Bundle Input</h2>
+          <span style="font-size: 0.74rem; color: var(--color-secondary);">JSON File Drop or Paste</span>
+        </div>
+        <div class="dropzone" id="proofDropzone">
+          <p class="dropzone-text"><strong>Select or drop proof bundle JSON</strong></p>
+          <p class="dropzone-hint">Format: proofchain-proof/1 schema</p>
+          <input type="file" id="proofFileInput" style="display: none;" accept=".json">
+        </div>
+        <div class="form-group" style="margin-top: 14px; margin-bottom: 0;">
+          <label class="form-label" for="proofTextInput">Or Paste Proof Bundle JSON</label>
+          <textarea class="form-textarea mono" id="proofTextInput" placeholder='{
+  "version": "proofchain-proof/1",
+  "canonicalization": "proofchain/v1/file",
+  "fingerprint": "64_hex_fingerprint",
+  "leaf_index": 0,
+  "tree_size": 1,
+  "path": [],
+  "claimed_root": "64_hex_root",
+  "batch_id": "YYYY-MM-B0001"
+}'></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Input 3: Published Root Input</h2>
+          <span style="font-size: 0.74rem; color: var(--color-secondary);">Independent Witness Anchor</span>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" for="publishedRootInput">64-Hex Root String or Full Checkpoint JSON</label>
+          <input type="text" class="form-input mono-input" id="publishedRootInput"
+                 placeholder="Enter 64-hex root string or paste serialized Checkpoint JSON">
+        </div>
+      </div>
+
+      <div style="text-align: center; margin: 28px 0;">
+        <button class="btn" id="runVerifyBtn" style="padding: 12px 36px; font-size: 0.9rem;">
+          Execute Verification Stepper
+        </button>
+      </div>
+
+      <!-- Step-by-Step Diagnostic Stepper -->
+      <div class="card" id="stepperCard" style="display: none;">
+        <div class="card-header">
+          <h2>Diagnostic Stepper</h2>
+          <span style="font-size: 0.74rem; color: var(--color-secondary);">Sequential Protocol Evaluation</span>
+        </div>
+        <div class="stepper">
+          <div class="step" id="step-v0">
+            <div class="step-indicator">V0</div>
+            <div class="step-body">
+              <div class="step-title">Input Well-Formedness Checks</div>
+              <div class="step-code">MALFORMED_INPUT</div>
+            </div>
+            <div class="step-result">—</div>
+          </div>
+          <div class="step" id="step-v1">
+            <div class="step-indicator">V1</div>
+            <div class="step-body">
+              <div class="step-title">Canonicalization Parser Checks</div>
+              <div class="step-code">UNSUPPORTED_FORMAT</div>
+            </div>
+            <div class="step-result">—</div>
+          </div>
+          <div class="step" id="step-v2">
+            <div class="step-indicator">V2</div>
+            <div class="step-body">
+              <div class="step-title">Raw File SHA-256 == Proof Fingerprint</div>
+              <div class="step-code">DOCUMENT_MODIFIED</div>
+            </div>
+            <div class="step-result">—</div>
+          </div>
+          <div class="step" id="step-v3">
+            <div class="step-indicator">V3</div>
+            <div class="step-body">
+              <div class="step-title">Leaf Index &amp; Path Length Bounds</div>
+              <div class="step-code">INVALID_PROOF</div>
+            </div>
+            <div class="step-result">—</div>
+          </div>
+          <div class="step" id="step-v4">
+            <div class="step-indicator">V4</div>
+            <div class="step-body">
+              <div class="step-title">Recomputed Path == Claimed Root</div>
+              <div class="step-code">INVALID_PROOF</div>
+            </div>
+            <div class="step-result">—</div>
+          </div>
+          <div class="step" id="step-v5">
+            <div class="step-indicator">V5</div>
+            <div class="step-body">
+              <div class="step-title">Recomputed Root == Published Root</div>
+              <div class="step-code">ROOT_MISMATCH</div>
+            </div>
+            <div class="step-result">—</div>
+          </div>
+          <div class="step" id="step-v6">
+            <div class="step-indicator">V6</div>
+            <div class="step-body">
+              <div class="step-title">Checkpoint Ed25519 &amp; Chain Validity</div>
+              <div class="step-code">CHECKPOINT_INVALID</div>
+            </div>
+            <div class="step-result">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Verification Results Pane -->
+      <div id="verdictSection" style="display: none;">
+        <div class="verdict-box" id="verdictBox">
+          <div class="verdict-text mono" id="verdictText">VERDICT: VALID</div>
+          <div id="failureCodesContainer"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2>Hash Inspection Panel (Side-by-Side Comparison)</h2>
+          </div>
+          <div class="hash-panel">
+            <div class="hash-item" id="hashComputedItem">
+              <div class="hash-item-label">Computed Document SHA-256</div>
+              <div class="hash-item-value mono" id="hashComputedVal">—</div>
+            </div>
+            <div class="hash-item" id="hashClaimedItem">
+              <div class="hash-item-label">Claimed Proof Fingerprint</div>
+              <div class="hash-item-value mono" id="hashClaimedVal">—</div>
+            </div>
+            <div class="hash-item" id="hashRecomputedItem">
+              <div class="hash-item-label">Recomputed Merkle Root</div>
+              <div class="hash-item-value mono" id="hashRecomputedVal">—</div>
+            </div>
+            <div class="hash-item" id="hashPublishedItem">
+              <div class="hash-item-label">Published Reference Root</div>
+              <div class="hash-item-value mono" id="hashPublishedVal">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="advisory-box">
+          <div class="advisory-label">System Advisory Note (Non-Authoritative)</div>
+          <div class="advisory-text" id="advisoryText"></div>
+        </div>
+      </div>
+
+    </main>
+
+    <footer style="border-top: 1px solid var(--color-border); padding: 18px 24px; text-align: center;">
+      <span style="font-size: 0.75rem; color: var(--color-secondary);">ProofChain Front-End Functional Specification</span>
+    </footer>
+
+  </div>
+
+  <script type="module" src="js/crypto.js"></script>
+  <script type="module" src="js/verify.js"></script>
+</body>
+</html>

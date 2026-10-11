@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ProofChain Audit & Tamper Demonstration — Live cryptographic comparison between naive database hashing and witness-anchored Merkle proofs.">
+  <title>Audit &amp; Tamper Demo — ProofChain</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+
+    <nav class="top-nav">
+      <a href="index.html" class="nav-logo">PROOFCHAIN</a>
+      <ul class="nav-links">
+        <li><a href="register.html">Register</a></li>
+        <li><a href="batches.html">Batches</a></li>
+        <li><a href="verify.html">Verify</a></li>
+        <li><a href="audit.html" class="active">Audit</a></li>
+      </ul>
+    </nav>
+
+    <main class="main-content">
+      <h1 class="page-title">Audit &amp; Tamper Demonstration</h1>
+      <p class="page-subtitle">Evaluation and verification testing. Compare naive internal database registry checks against externally witnessed ProofChain verification with active tamper injection.</p>
+
+      <!-- Side-by-Side Verification Comparison -->
+      <div class="split-columns" id="comparisonContainer">
+
+        <!-- Column A: Naive Registry -->
+        <div class="split-col">
+          <h3>Column A: Naive Registry</h3>
+          <p style="font-size: 0.8rem; color: var(--color-secondary); margin-bottom: 14px;">
+            Standard centralized database verification: document hash stored directly beside table record. Internal trust only.
+          </p>
+          <div style="padding: 10px 12px; background: var(--color-muted); border-radius: var(--radius); margin-bottom: 12px;">
+            <p class="section-label" style="margin-bottom: 4px;">Validation Rule</p>
+            <div class="mono" style="font-size: 0.78rem;">SHA-256(content) == db.stored_hash</div>
+          </div>
+          <div style="padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius);">
+            <p class="section-label" style="margin-bottom: 4px;">Inspection Verdict</p>
+            <div class="result mono" id="naiveResult">VERDICT: PASS</div>
+            <div style="font-size: 0.76rem; color: var(--color-secondary); margin-top: 6px; line-height: 1.4;" id="naiveDetail">
+              Document hash matches db.stored_hash directly.
+            </div>
+          </div>
+        </div>
+
+        <!-- Column B: ProofChain -->
+        <div class="split-col">
+          <h3>Column B: ProofChain</h3>
+          <p style="font-size: 0.8rem; color: var(--color-secondary); margin-bottom: 14px;">
+            External ledger verification: cryptographic Merkle proof anchored to independently witnessed checkpoints.
+          </p>
+          <div style="padding: 10px 12px; background: var(--color-muted); border-radius: var(--radius); margin-bottom: 12px;">
+            <p class="section-label" style="margin-bottom: 4px;">Validation Rule</p>
+            <div class="mono" style="font-size: 0.78rem;">MerkleVerify(doc, proof) == witness_root</div>
+          </div>
+          <div style="padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius);">
+            <p class="section-label" style="margin-bottom: 4px;">Inspection Verdict</p>
+            <div class="result mono" id="proofchainResult">VERDICT: PASS</div>
+            <div style="font-size: 0.76rem; color: var(--color-secondary); margin-top: 6px; line-height: 1.4;" id="proofchainDetail">
+              Proof validated against published witness checkpoint root.
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Tamper Simulation Buttons -->
+      <div class="card" style="margin-top: 24px;">
+        <div class="card-header">
+          <h2>Tamper Simulation Triggers</h2>
+          <button class="btn btn-outline btn-sm" id="resetBtn">Reset All To Clean State</button>
+        </div>
+        <p style="font-size: 0.8rem; color: var(--color-secondary); margin-bottom: 14px;">
+          Select a tamper injection vector to trigger immediate re-verification across both columns:
+        </p>
+        <div class="tamper-grid">
+
+          <button class="tamper-btn" id="tamperByteBtn">
+            <span class="tamper-btn-title">Corrupt 1 Byte in File</span>
+            <span class="tamper-btn-effect">Target: DOCUMENT_MODIFIED</span>
+          </button>
+
+          <button class="tamper-btn" id="tamperSiblingBtn">
+            <span class="tamper-btn-title">Corrupt Proof Sibling Hash</span>
+            <span class="tamper-btn-effect">Target: INVALID_PROOF</span>
+          </button>
+
+          <button class="tamper-btn" id="tamperDbBtn">
+            <span class="tamper-btn-title">Modify DB Record &amp; Rebuild DB Root</span>
+            <span class="tamper-btn-effect">Target: Naive PASS vs ProofChain ROOT_MISMATCH</span>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Subtree Mismatch Locator -->
+      <div class="card" id="mismatchCard" style="display: none; margin-top: 20px;">
+        <div class="card-header">
+          <h2>Subtree Mismatch Locator</h2>
+          <span style="font-size: 0.74rem; color: var(--color-secondary);">Tree Audit Traversal Divergence Point</span>
+        </div>
+        <p style="font-size: 0.8rem; color: var(--color-secondary); margin-bottom: 12px;">
+          Displays the precise tree node where the local database hash diverged from the independent witness published root:
+        </p>
+        <div style="padding: 12px; background: var(--color-muted); border-radius: var(--radius); margin-bottom: 12px;">
+          <p class="section-label" style="margin-bottom: 4px;">Divergence Node Identification</p>
+          <div class="mono" id="divergenceNode" style="font-size: 0.8rem; word-break: break-all;">—</div>
+        </div>
+        <div class="tree-dag" id="treeDagDisplay"></div>
+      </div>
+
+    </main>
+
+    <footer style="border-top: 1px solid var(--color-border); padding: 18px 24px; text-align: center;">
+      <span style="font-size: 0.75rem; color: var(--color-secondary);">ProofChain Front-End Functional Specification</span>
+    </footer>
+
+  </div>
+
+  <script type="module" src="js/crypto.js"></script>
+  <script type="module" src="js/state.js"></script>
+  <script type="module" src="js/audit.js"></script>
+</body>
+</html>

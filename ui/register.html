@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ProofChain Registration & Ingestion — Upload documents, select canonicalization, review advisory metadata, and compute SHA-256 fingerprint.">
+  <title>Registration &amp; Ingestion — ProofChain</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+
+    <nav class="top-nav">
+      <a href="index.html" class="nav-logo">PROOFCHAIN</a>
+      <ul class="nav-links">
+        <li><a href="register.html" class="active">Register</a></li>
+        <li><a href="batches.html">Batches</a></li>
+        <li><a href="verify.html">Verify</a></li>
+        <li><a href="audit.html">Audit</a></li>
+      </ul>
+    </nav>
+
+    <main class="main-content">
+      <h1 class="page-title">Registration &amp; Ingestion</h1>
+      <p class="page-subtitle">Upload binary documents or structured JSON payloads, select canonicalization schemes, review advisory metadata, and compute cryptographic fingerprints.</p>
+
+      <!-- 1. Document Upload Area -->
+      <div class="card">
+        <div class="card-header">
+          <h2>1. File Upload Area</h2>
+          <span style="font-size: 0.74rem; color: var(--color-secondary);">Binary (PDF, Images) or Structured JSON</span>
+        </div>
+        <div class="dropzone" id="dropzone">
+          <p class="dropzone-text"><strong>Select or drop file here</strong> to ingest</p>
+          <p class="dropzone-hint">Accepted formats: PDF, PNG, JPG, JPEG, GIF, JSON</p>
+          <input type="file" id="fileInput" style="display: none;" accept=".pdf,.png,.jpg,.jpeg,.gif,.json">
+        </div>
+        <div id="fileInfo" style="display: none; margin-top: 14px; padding: 10px 14px; background: var(--color-muted); border-radius: var(--radius);">
+          <div style="font-size: 0.8rem;">
+            <strong>Selected File:</strong> <span id="fileName" class="mono"></span>
+          </div>
+          <div style="font-size: 0.78rem; color: var(--color-secondary); margin-top: 2px;">
+            <strong>Size:</strong> <span id="fileSize"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Canonical Format Selector -->
+      <div class="card">
+        <div class="card-header">
+          <h2>2. Canonical Format Selector</h2>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" for="canonFormat">Supported Canonicalization Schemes</label>
+          <select class="form-select" id="canonFormat">
+            <option value="proofchain/v1/file">proofchain/v1/file</option>
+            <option value="rfc8785">RFC 8785 (JSON Canonicalization Scheme)</option>
+            <option value="utf8-nfc">UTF-8 NFC Plain Text</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 3. AI Metadata Review Drawer -->
+      <div class="card">
+        <div class="card-header">
+          <h2>3. AI Metadata Review Drawer</h2>
+          <span class="badge badge-pending">AI-Generated Advisory Metadata</span>
+        </div>
+        <div class="info-banner">
+          Model-extracted fields must be verified. Modifying inputs will update the submission metadata record.
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+          <div class="form-group">
+            <label class="form-label" for="metaIssuer">Issuer</label>
+            <input type="text" class="form-input" id="metaIssuer" placeholder="Enter issuer authority">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="metaDate">Date</label>
+            <input type="text" class="form-input" id="metaDate" placeholder="YYYY-MM-DD">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="metaDocType">Document Type</label>
+            <input type="text" class="form-input" id="metaDocType" placeholder="Document classification">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="metaCategory">Category</label>
+            <input type="text" class="form-input" id="metaCategory" placeholder="Category tag">
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px; flex-wrap: wrap;">
+          <button class="btn btn-sm btn-outline" id="confirmMetaBtn" disabled>Confirm Metadata</button>
+          <span id="confirmStatus" class="mono" style="font-size: 0.74rem; color: var(--color-secondary);"></span>
+        </div>
+      </div>
+
+      <!-- 4. Output Container -->
+      <div class="card">
+        <div class="card-header">
+          <h2>4. Output Container</h2>
+          <span class="badge badge-pending" id="statusBadge">PENDING_BATCH</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Computed Fingerprint: SHA-256(tag || canonical_bytes)</label>
+          <input type="text" class="form-input mono-input" id="fingerprintOutput" readonly
+                 placeholder="64 hex characters will be computed upon file selection..."
+                 value="">
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+          <button class="btn btn-outline btn-sm" id="copyFpBtn" disabled>Copy Fingerprint</button>
+          <button class="btn btn-sm" id="registerActionBtn" disabled>Ingest &amp; Assign to Batch</button>
+        </div>
+
+        <div id="registrationFeedback" style="display: none; margin-top: 18px; padding: 14px; background: var(--color-muted); border-radius: var(--radius); border: 1px solid var(--color-border-light);">
+          <p class="section-label" style="margin-bottom: 6px;">Batch Ingestion Complete</p>
+          <div style="font-size: 0.8rem; line-height: 1.6;">
+            <div><strong>Assigned Batch ID:</strong> <span class="mono" id="assignedBatchId"></span></div>
+            <div><strong>Assigned Leaf Index:</strong> <span class="mono" id="assignedLeafIndex"></span></div>
+            <div><strong>Merkle Root (64 Hex):</strong> <span class="mono" id="activeRootHex"></span></div>
+          </div>
+          <div style="margin-top: 12px;">
+            <button class="btn btn-sm btn-outline" id="downloadProofBtn">Download Proof Bundle JSON</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <footer style="border-top: 1px solid var(--color-border); padding: 18px 24px; text-align: center;">
+      <span style="font-size: 0.75rem; color: var(--color-secondary);">ProofChain Front-End Functional Specification</span>
+    </footer>
+
+  </div>
+
+  <script type="module" src="js/crypto.js"></script>
+  <script type="module" src="js/state.js"></script>
+  <script type="module" src="js/register.js"></script>
+</body>
+</html>
