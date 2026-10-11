@@ -1,0 +1,810 @@
+/*
+   ProofChain Design System
+   Harmonious Two-Color Combination: Midnight Indigo + Cream Vanilla
+   Strictly Two Colors — High Contrast Balanced Composition
+*/
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Midnight Indigo Family */
+  --indigo-deep: #0e1336;       /* Deepest midnight indigo */
+  --indigo-primary: #151c4a;    /* Core midnight indigo */
+  --indigo-elevated: #1e2764;   /* Surface midnight indigo */
+  --indigo-accent: #293480;     /* Border / highlight indigo */
+  --indigo-muted: #3d4a99;      /* Muted indigo text */
+
+  /* Vanilla Family */
+  --vanilla-bright: #fffef9;    /* Clean vanilla card */
+  --vanilla-canvas: #f6f2e6;    /* Base vanilla canvas */
+  --vanilla-tint: #eee7d4;      /* Vanilla fill / table stripe */
+  --vanilla-border: #ded4bc;    /* Warm vanilla border */
+  --vanilla-dark: #c9bea3;      /* Deep vanilla */
+
+  /* Semantic Color Tokens */
+  --color-canvas: var(--vanilla-canvas);
+  --color-card-bg: var(--vanilla-bright);
+  --color-card-border: var(--indigo-primary);
+
+  --color-text-dark: var(--indigo-deep);
+  --color-text-light: var(--vanilla-bright);
+  --color-text-muted: #4a548c;
+
+  --color-indigo-block: var(--indigo-primary);
+  --color-vanilla-block: var(--vanilla-bright);
+
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  --radius: 2px;
+  --transition: 120ms ease;
+}
+
+html {
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-text-dark);
+  background-color: var(--color-canvas);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  max-width: 980px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+/* ============================================================
+   1. NAVIGATION: Bold Midnight Indigo Header with Vanilla Links
+   ============================================================ */
+.top-nav {
+  background: var(--indigo-deep);
+  border-bottom: 2px solid var(--indigo-accent);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 58px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.nav-logo {
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.8px;
+  text-decoration: none;
+  color: var(--vanilla-bright);
+  font-family: var(--font-mono);
+}
+
+.nav-links {
+  display: flex;
+  gap: 0;
+  list-style: none;
+  height: 100%;
+  align-items: center;
+}
+
+.nav-links a {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  height: 100%;
+  text-decoration: none;
+  color: var(--vanilla-border);
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  color: var(--vanilla-bright);
+  border-bottom-color: var(--vanilla-bright);
+}
+
+/* ============================================================
+   2. TYPOGRAPHY
+   ============================================================ */
+.page-title {
+  font-size: 1.7rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--indigo-deep);
+  margin-bottom: 6px;
+}
+
+.page-subtitle {
+  font-size: 0.92rem;
+  color: var(--color-text-muted);
+  margin-bottom: 28px;
+  max-width: 760px;
+}
+
+.section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+
+/* ============================================================
+   3. DUAL-TONE CARDS
+   Crisp Vanilla card body with Midnight Indigo top header banner
+   ============================================================ */
+.card {
+  border: 1.5px solid var(--indigo-primary);
+  border-radius: var(--radius);
+  background: var(--vanilla-bright);
+  margin-bottom: 22px;
+  overflow: hidden;
+}
+
+.card-header {
+  background: var(--indigo-primary);
+  color: var(--vanilla-bright);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.card-header h2 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: var(--vanilla-bright);
+  margin: 0;
+}
+
+.card-header span {
+  color: var(--vanilla-border) !important;
+}
+
+.card > div:not(.card-header),
+.card > form,
+.card > p {
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.card > div:first-child:not(.card-header) {
+  padding-top: 20px;
+}
+
+.card > div:last-child {
+  padding-bottom: 20px;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+/* Contrast Indigo Card (Reversed Dual-Tone) */
+.card-indigo {
+  background: var(--indigo-primary);
+  color: var(--vanilla-bright);
+  border: 1.5px solid var(--indigo-deep);
+}
+
+.card-indigo .card-header {
+  background: var(--indigo-deep);
+  border-bottom: 1px solid var(--indigo-accent);
+}
+
+.card-indigo h2,
+.card-indigo h3,
+.card-indigo p,
+.card-indigo div {
+  color: var(--vanilla-bright);
+}
+
+.card-indigo .section-label {
+  color: var(--vanilla-border);
+}
+
+/* ============================================================
+   4. BUTTONS: Midnight Indigo & Vanilla Interplay
+   ============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 18px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  border: 1.5px solid var(--indigo-primary);
+  border-radius: var(--radius);
+  background: var(--indigo-primary);
+  color: var(--vanilla-bright);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color var(--transition), color var(--transition);
+}
+
+.btn:hover {
+  background: var(--indigo-elevated);
+}
+
+.btn-outline {
+  background: var(--vanilla-bright);
+  color: var(--indigo-primary);
+  border: 1.5px solid var(--indigo-primary);
+}
+
+.btn-outline:hover {
+  background: var(--vanilla-tint);
+}
+
+.btn-vanilla {
+  background: var(--vanilla-bright);
+  color: var(--indigo-primary);
+  border: 1.5px solid var(--vanilla-bright);
+}
+
+.btn-vanilla:hover {
+  background: var(--vanilla-canvas);
+}
+
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 0.78rem;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   5. FORM INPUTS & DROPZONE
+   ============================================================ */
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--indigo-deep);
+  margin-bottom: 6px;
+  letter-spacing: 0.2px;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  font-family: var(--font-sans);
+  border: 1.5px solid var(--vanilla-border);
+  border-radius: var(--radius);
+  background: var(--vanilla-canvas);
+  color: var(--indigo-deep);
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--indigo-primary);
+  background: var(--vanilla-bright);
+}
+
+.form-input.mono-input {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  letter-spacing: 0.3px;
+}
+
+.form-textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.form-textarea.mono {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 16 16'%3E%3Cpath fill='%23151c4a' d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.dropzone {
+  border: 2px dashed var(--indigo-primary);
+  border-radius: var(--radius);
+  padding: 36px 20px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--vanilla-canvas);
+  margin: 16px 20px;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.dropzone:hover,
+.dropzone.drag-over {
+  background: var(--vanilla-tint);
+  border-color: var(--indigo-elevated);
+}
+
+.dropzone-text {
+  font-size: 0.86rem;
+  color: var(--indigo-deep);
+}
+
+.dropzone-text strong {
+  color: var(--indigo-primary);
+}
+
+.dropzone-hint {
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+
+/* ============================================================
+   6. BADGES
+   ============================================================ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  border-radius: var(--radius);
+  white-space: nowrap;
+}
+
+.badge-pending {
+  background: var(--vanilla-tint);
+  color: var(--indigo-deep);
+  border: 1px solid var(--indigo-accent);
+}
+
+.badge-sealed {
+  background: var(--indigo-primary);
+  color: var(--vanilla-bright);
+  border: 1px solid var(--vanilla-bright);
+}
+
+.badge-anchored {
+  background: var(--vanilla-bright);
+  color: var(--indigo-primary);
+  border: 2px solid var(--indigo-primary);
+}
+
+/* ============================================================
+   7. TABLES: Midnight Indigo Header + Striped Vanilla Rows
+   ============================================================ */
+.table-wrap {
+  overflow-x: auto;
+  border: 1.5px solid var(--indigo-primary);
+  border-radius: var(--radius);
+  background: var(--vanilla-bright);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+thead {
+  background: var(--indigo-primary);
+  color: var(--vanilla-bright);
+}
+
+th {
+  text-align: left;
+  padding: 12px 14px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--vanilla-bright);
+  border-bottom: 2px solid var(--indigo-deep);
+}
+
+td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--vanilla-border);
+  vertical-align: middle;
+  color: var(--indigo-deep);
+}
+
+tr:nth-child(even):not(.batch-drawer) {
+  background: var(--vanilla-canvas);
+}
+
+td.mono-cell {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr.clickable-row {
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+tr.clickable-row:hover {
+  background: var(--vanilla-tint) !important;
+}
+
+tr.active-row {
+  background: var(--vanilla-tint) !important;
+}
+
+/* ============================================================
+   8. STEPPER
+   ============================================================ */
+.stepper {
+  display: flex;
+  flex-direction: column;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--vanilla-border);
+}
+
+.step:last-child {
+  border-bottom: none;
+}
+
+.step-indicator {
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid var(--indigo-primary);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+}
+
+.step.pass .step-indicator {
+  background: var(--indigo-primary);
+  color: var(--vanilla-bright);
+}
+
+.step.fail .step-indicator {
+  background: var(--vanilla-bright);
+  color: var(--indigo-primary);
+  border-width: 2.5px;
+}
+
+.step.skip .step-indicator {
+  background: var(--vanilla-tint);
+  color: var(--color-text-muted);
+  border-color: var(--vanilla-border);
+}
+
+.step-body {
+  flex: 1;
+}
+
+.step-title {
+  font-size: 0.87rem;
+  font-weight: 600;
+  color: var(--indigo-deep);
+}
+
+.step-code {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.step-result {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  color: var(--indigo-deep);
+}
+
+/* ============================================================
+   9. VERDICT & HASH INSPECTION
+   ============================================================ */
+.verdict-box {
+  text-align: center;
+  padding: 26px;
+  border: 2px solid var(--indigo-primary);
+  border-radius: var(--radius);
+  margin: 20px 0;
+  background: var(--indigo-primary);
+  color: var(--vanilla-bright);
+}
+
+.verdict-text {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--vanilla-bright);
+}
+
+.verdict-code {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--vanilla-border);
+  margin-top: 6px;
+}
+
+.hash-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  padding: 20px;
+}
+
+.hash-item {
+  padding: 14px;
+  background: var(--vanilla-canvas);
+  border: 1.5px solid var(--vanilla-border);
+  border-radius: var(--radius);
+}
+
+.hash-item-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+}
+
+.hash-item-value {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  word-break: break-all;
+  line-height: 1.45;
+  color: var(--indigo-deep);
+}
+
+.hash-item.hash-mismatch {
+  border: 2px solid var(--indigo-primary);
+  background: var(--vanilla-bright);
+}
+
+.advisory-box {
+  border: 1.5px solid var(--indigo-primary);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 16px;
+  background: var(--vanilla-bright);
+}
+
+.advisory-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--indigo-deep);
+  margin-bottom: 6px;
+}
+
+.advisory-text {
+  font-size: 0.85rem;
+  color: var(--indigo-deep);
+  line-height: 1.5;
+}
+
+/* ============================================================
+   10. AUDIT SPLIT COLUMNS (DUAL-TONE SHOWCASE)
+   Column A is Vanilla themed; Column B is Midnight Indigo themed!
+   ============================================================ */
+.split-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* Column A: Cream Vanilla */
+.split-col:first-child {
+  border: 1.5px solid var(--indigo-primary);
+  border-radius: var(--radius);
+  padding: 22px;
+  background: var(--vanilla-bright);
+  color: var(--indigo-deep);
+}
+
+.split-col:first-child h3 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--indigo-deep);
+  margin-bottom: 12px;
+}
+
+.split-col:first-child .result {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--indigo-deep);
+  margin-top: 10px;
+}
+
+/* Column B: Midnight Indigo */
+.split-col:last-child {
+  border: 1.5px solid var(--indigo-deep);
+  border-radius: var(--radius);
+  padding: 22px;
+  background: var(--indigo-primary);
+  color: var(--vanilla-bright);
+}
+
+.split-col:last-child h3 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--vanilla-bright);
+  margin-bottom: 12px;
+}
+
+.split-col:last-child p,
+.split-col:last-child div {
+  color: var(--vanilla-bright);
+}
+
+.split-col:last-child .result {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--vanilla-bright);
+  margin-top: 10px;
+}
+
+.split-col:last-child .mono {
+  color: var(--vanilla-bright);
+}
+
+/* ============================================================
+   11. TAMPER BUTTONS
+   ============================================================ */
+.tamper-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 0 20px 20px;
+}
+
+.tamper-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 14px;
+  border: 1.5px solid var(--indigo-primary);
+  border-radius: var(--radius);
+  background: var(--vanilla-canvas);
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+  text-align: left;
+}
+
+.tamper-btn:hover {
+  background: var(--vanilla-tint);
+}
+
+.tamper-btn.active {
+  background: var(--indigo-primary);
+  border: 2px solid var(--indigo-deep);
+}
+
+.tamper-btn.active .tamper-btn-title {
+  color: var(--vanilla-bright);
+}
+
+.tamper-btn.active .tamper-btn-effect {
+  color: var(--vanilla-border);
+}
+
+.tamper-btn-title {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--indigo-deep);
+}
+
+.tamper-btn-effect {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+}
+
+/* Merkle Tree DAG */
+.tree-dag {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 16px;
+  background: var(--vanilla-canvas);
+  border: 1.5px solid var(--indigo-primary);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  white-space: pre;
+  line-height: 1.6;
+  color: var(--indigo-deep);
+}
+
+.info-banner {
+  padding: 12px 14px;
+  background: var(--vanilla-canvas);
+  border: 1.5px solid var(--vanilla-border);
+  border-radius: var(--radius);
+  font-size: 0.82rem;
+  color: var(--indigo-deep);
+  margin-bottom: 16px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 24px 16px;
+  }
+  .hash-panel,
+  .split-columns,
+  .tamper-grid {
+    grid-template-columns: 1fr;
+  }
+  .nav-links a {
+    padding: 0 10px;
+    font-size: 0.78rem;
+  }
+}
