@@ -8,6 +8,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(import.meta.dirname, 'index.html'),
+        login: resolve(import.meta.dirname, 'ui/login.html'),
         uiHome: resolve(import.meta.dirname, 'ui/index.html'),
         register: resolve(import.meta.dirname, 'ui/register.html'),
         batches: resolve(import.meta.dirname, 'ui/batches.html'),
