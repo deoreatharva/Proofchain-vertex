@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ProofChain Operator Authentication — Minimal secure login gateway.">
+  <title>Login — ProofChain</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .login-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: var(--color-canvas);
+    }
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      border: 1.5px solid var(--indigo-primary);
+      border-radius: var(--radius);
+      background: var(--vanilla-bright);
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(14, 19, 54, 0.08);
+    }
+    .login-header {
+      background: var(--indigo-primary);
+      color: var(--vanilla-bright);
+      padding: 28px 24px;
+      text-align: center;
+    }
+    .login-logo {
+      font-family: var(--font-mono);
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+    }
+    .login-subtitle {
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--vanilla-border);
+    }
+    .login-body {
+      padding: 28px 24px;
+    }
+    .demo-divider {
+      display: flex;
+      align-items: center;
+      margin: 20px 0 16px;
+      gap: 10px;
+    }
+    .demo-divider::before,
+    .demo-divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--vanilla-border);
+    }
+    .demo-divider span {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--color-text-muted);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <div class="login-card">
+
+      <div class="login-header">
+        <div class="login-logo">PROOFCHAIN</div>
+        <div class="login-subtitle">Operator Access Gateway</div>
+      </div>
+
+      <div class="login-body">
+        <form id="loginForm">
+          <div class="form-group">
+            <label class="form-label" for="operatorId">Operator ID / Username</label>
+            <input type="text" class="form-input mono-input" id="operatorId" required
+                   placeholder="e.g. fuckflagm" value="fuckflagm">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="accessKey">Access Key / Passphrase</label>
+            <input type="password" class="form-input mono-input" id="accessKey" required
+                   placeholder="Enter access passphrase" value="proofchain-session-2026">
+          </div>
+
+          <div style="margin-top: 24px;">
+            <button type="submit" class="btn" style="width: 100%; padding: 11px;">
+              Authenticate Session
+            </button>
+          </div>
+        </form>
+
+        <div class="demo-divider">
+          <span>Quick Demo Access</span>
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn btn-outline btn-sm" id="quickOperatorBtn" style="flex: 1;">
+            Demo Operator
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" id="guestAuditorBtn" style="flex: 1;">
+            Guest Auditor
+          </button>
+        </div>
+
+        <div id="loginStatus" class="mono" style="margin-top: 14px; font-size: 0.74rem; text-align: center; color: var(--color-text-muted);"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script type="module" src="js/theme.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const form = document.getElementById('loginForm');
+      const operatorInput = document.getElementById('operatorId');
+      const keyInput = document.getElementById('accessKey');
+      const statusDiv = document.getElementById('loginStatus');
+
+      function authenticate(user, role) {
+        statusDiv.textContent = 'Verifying cryptographic session...';
+        
+        setTimeout(() => {
+          const session = {
+            operator: user || 'fuckflagm',
+            role: role || 'LEDGER_OPERATOR',
+            authenticated_at: new Date().toISOString(),
+            session_id: 'sess_' + Math.random().toString(36).substring(2, 10)
+          };
+
+          localStorage.setItem('proofchain_session', JSON.stringify(session));
+          statusDiv.textContent = 'Session authenticated. Redirecting...';
+          
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 300);
+        }, 200);
+      }
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        authenticate(operatorInput.value.trim(), 'LEDGER_OPERATOR');
+      });
+
+      document.getElementById('quickOperatorBtn').addEventListener('click', () => {
+        authenticate('fuckflagm', 'CHIEF_OPERATOR');
+      });
+
+      document.getElementById('guestAuditorBtn').addEventListener('click', () => {
+        authenticate('external-witness', 'INDEPENDENT_AUDITOR');
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -2,10 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=ui/index.html">
-  <title>ProofChain Redirect</title>
+  <title>ProofChain</title>
+  <script>
+    (function() {
+      const session = localStorage.getItem('proofchain_session');
+      if (session) {
+        window.location.replace('ui/index.html');
+      } else {
+        window.location.replace('ui/login.html');
+      }
+    })();
+  </script>
 </head>
 <body>
-  <p>Redirecting to <a href="ui/index.html">ProofChain UI</a>...</p>
+  <p>Connecting to ProofChain...</p>
 </body>
 </html>
