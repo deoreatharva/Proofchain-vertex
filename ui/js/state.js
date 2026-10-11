@@ -170,12 +170,63 @@ window.ProofChainStore = (function () {
     }
   }
 
+  function setPendingVerification(data) {
+    sessionStorage.setItem('proofchain_pending_verification', JSON.stringify(data));
+  }
+
+  function getPendingVerification() {
+    const raw = sessionStorage.getItem('proofchain_pending_verification');
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function clearPendingVerification() {
+    sessionStorage.removeItem('proofchain_pending_verification');
+  }
+
+  const SAMPLE_DOCUMENTS = [
+    {
+      name: 'degree_certificate_mit_2026.pdf',
+      text: 'ACADEMIC CREDENTIAL ATTESTATION\nInstitution: Massachusetts Institute of Technology\nRecipient: Alex Vance\nDegree: Master of Science in Cryptographic Engineering\nGraduation Date: 2026-06-15\nStatus: SUMMA CUM LAUDE\nSeal ID: MIT-ENG-2026-8819',
+      issuer: 'MIT Office of the Registrar',
+      date: '2026-06-15',
+      document_type: 'ACADEMIC_CREDENTIAL',
+      category: 'HIGHER_EDUCATION',
+      format: 'proofchain/v1/file'
+    },
+    {
+      name: 'central_bank_treasury_transfer_record.json',
+      text: JSON.stringify({
+        transaction_id: 'TXN-TREASURY-2026-90812',
+        originator_bic: 'FEDRUS33XXX',
+        settlement_bic: 'ECBFRPP1XXX',
+        amount_cents: 8500000000,
+        currency: 'USD',
+        value_date: '2026-10-11',
+        clearing_network: 'FEDNOW_HIGH_VALUE'
+      }, null, 2),
+      issuer: 'Federal Reserve Bank Settlement Authority',
+      date: '2026-10-11',
+      document_type: 'FINANCIAL_SETTLEMENT',
+      category: 'CENTRAL_BANKING',
+      format: 'rfc8785'
+    }
+  ];
+
   return {
     initializeLedgerIfEmpty,
     getBatches,
     saveBatches,
     registerDocument,
     getRegisteredDocs,
-    getCurrentYearMonth
+    getCurrentYearMonth,
+    setPendingVerification,
+    getPendingVerification,
+    clearPendingVerification,
+    SAMPLE_DOCUMENTS
   };
 })();

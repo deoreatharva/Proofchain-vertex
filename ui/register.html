@@ -24,6 +24,12 @@
       <h1 class="page-title">Registration &amp; Ingestion</h1>
       <p class="page-subtitle">Upload binary documents or structured JSON payloads, select canonicalization schemes, review advisory metadata, and compute cryptographic fingerprints.</p>
 
+      <div style="display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; align-items: center;">
+        <span class="section-label" style="margin: 0;">Demo Presets:</span>
+        <button class="btn btn-sm btn-outline" id="loadSampleCredBtn">Load Academic Credential</button>
+        <button class="btn btn-sm btn-outline" id="loadSampleFinBtn">Load Financial Record</button>
+      </div>
+
       <!-- 1. Document Upload Area -->
       <div class="card">
         <div class="card-header">
@@ -117,8 +123,10 @@
             <div><strong>Assigned Leaf Index:</strong> <span class="mono" id="assignedLeafIndex"></span></div>
             <div><strong>Merkle Root (64 Hex):</strong> <span class="mono" id="activeRootHex"></span></div>
           </div>
-          <div style="margin-top: 12px;">
+          <div style="display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;">
             <button class="btn btn-sm btn-outline" id="downloadProofBtn">Download Proof Bundle JSON</button>
+            <a href="batches.html" class="btn btn-sm btn-outline">View in Batch Ledger</a>
+            <button class="btn btn-sm" id="sendToVerifierBtn">Forward to Verifier</button>
           </div>
         </div>
       </div>
@@ -131,6 +139,7 @@
 
   </div>
 
+  <script type="module" src="js/theme.js"></script>
   <script type="module" src="js/crypto.js"></script>
   <script type="module" src="js/state.js"></script>
   <script type="module" src="js/register.js"></script>

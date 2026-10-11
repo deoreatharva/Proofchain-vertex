@@ -291,4 +291,68 @@
     }
   }
 
+  // --- Workflow Bridge & Test Presets ---
+  async function loadPresetScenario(type) {
+    uploadedDocBytes = null;
+    docFileName.textContent = '';
+    docFileInfo.style.display = 'none';
+
+    const sample = ProofChainStore.SAMPLE_DOCUMENTS[0];
+    const docBytes = new TextEncoder().encode(sample.text);
+    const fpResult = await ProofChainCrypto.computeDocumentFingerprint(sample.format, docBytes);
+
+    const tree = await ProofChainCrypto.buildMerkleTree([
+      fpResult.fingerprint,
+      '4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a',
+      '8754425983b1a23666d35793fa9bc82d8c3add4d733703cac76150d6a6066a7b',
+      '79054025255fb1a26e4bc422aef54eb4d080a14a804f1745204ec37399f5429c'
+    ]);
+
+    const validBundle = await ProofChainCrypto.generateProofBundle(tree, 0, sample.format, ProofChainStore.getCurrentYearMonth() + '-B0001');
+
+    if (type === 'VALID') {
+      docTextInput.value = sample.text;
+      proofTextInput.value = JSON.stringify(validBundle, null, 2);
+      publishedRootInput.value = tree.root;
+    } else if (type === 'MODIFIED') {
+      docTextInput.value = sample.text + '\n[TAMPERED: Altered Grade to Summa Cum Laude Modified]';
+      proofTextInput.value = JSON.stringify(validBundle, null, 2);
+      publishedRootInput.value = tree.root;
+    } else if (type === 'SIBLING') {
+      const corruptedBundle = JSON.parse(JSON.stringify(validBundle));
+      if (corruptedBundle.path.length > 0) {
+        corruptedBundle.path[0] = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
+      }
+      docTextInput.value = sample.text;
+      proofTextInput.value = JSON.stringify(corruptedBundle, null, 2);
+      publishedRootInput.value = tree.root;
+    } else if (type === 'MISMATCH') {
+      docTextInput.value = sample.text;
+      proofTextInput.value = JSON.stringify(validBundle, null, 2);
+      publishedRootInput.value = '1111222233334444555566667777888899990000aaaabbbbccccddddeeeeffff';
+    }
+
+    runVerifyBtn.click();
+  }
+
+  const presetValidBtn = document.getElementById('presetValidBtn');
+  const presetModifiedBtn = document.getElementById('presetModifiedBtn');
+  const presetSiblingBtn = document.getElementById('presetSiblingBtn');
+  const presetMismatchBtn = document.getElementById('presetMismatchBtn');
+
+  if (presetValidBtn) presetValidBtn.addEventListener('click', () => loadPresetScenario('VALID'));
+  if (presetModifiedBtn) presetModifiedBtn.addEventListener('click', () => loadPresetScenario('MODIFIED'));
+  if (presetSiblingBtn) presetSiblingBtn.addEventListener('click', () => loadPresetScenario('SIBLING'));
+  if (presetMismatchBtn) presetMismatchBtn.addEventListener('click', () => loadPresetScenario('MISMATCH'));
+
+  // Auto-load if directed from Register or Batches view
+  const pending = ProofChainStore.getPendingVerification();
+  if (pending) {
+    ProofChainStore.clearPendingVerification();
+    if (pending.documentText) docTextInput.value = pending.documentText;
+    if (pending.proofBundle) proofTextInput.value = JSON.stringify(pending.proofBundle, null, 2);
+    if (pending.publishedRoot) publishedRootInput.value = pending.publishedRoot;
+    setTimeout(() => runVerifyBtn.click(), 100);
+  }
+
 })();

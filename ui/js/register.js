@@ -179,8 +179,54 @@
       downloadAnchor.remove();
     };
 
+    // Forward to Verifier
+    const sendToVerifierBtn = document.getElementById('sendToVerifierBtn');
+    sendToVerifierBtn.onclick = function () {
+      ProofChainStore.setPendingVerification({
+        documentText: currentFile.sampleText || new TextDecoder('utf-8', { fatal: false }).decode(currentRawBytes),
+        proofBundle: registration.proofBundle,
+        publishedRoot: registration.batch.root
+      });
+      window.location.href = 'verify.html';
+    };
+
     registerActionBtn.textContent = 'Document Registered';
   });
+
+  // Demo Presets Handlers
+  const loadSampleCredBtn = document.getElementById('loadSampleCredBtn');
+  const loadSampleFinBtn = document.getElementById('loadSampleFinBtn');
+
+  if (loadSampleCredBtn) {
+    loadSampleCredBtn.addEventListener('click', () => loadSample(ProofChainStore.SAMPLE_DOCUMENTS[0]));
+  }
+  if (loadSampleFinBtn) {
+    loadSampleFinBtn.addEventListener('click', () => loadSample(ProofChainStore.SAMPLE_DOCUMENTS[1]));
+  }
+
+  async function loadSample(sample) {
+    canonFormat.value = sample.format;
+    metaIssuer.value = sample.issuer;
+    metaDate.value = sample.date;
+    metaDocType.value = sample.document_type;
+    metaCategory.value = sample.category;
+
+    currentFile = {
+      name: sample.name,
+      size: sample.text.length,
+      sampleText: sample.text
+    };
+    fileNameDisplay.textContent = sample.name;
+    fileSizeDisplay.textContent = formatBytes(sample.text.length);
+    fileInfo.style.display = 'block';
+
+    currentRawBytes = new TextEncoder().encode(sample.text);
+    await updateFingerprint();
+
+    confirmMetaBtn.disabled = false;
+    registerActionBtn.disabled = false;
+    confirmMetaBtn.click(); // auto confirm for fast demo
+  }
 
   function formatBytes(bytes) {
     if (bytes === 0) return '0 B';

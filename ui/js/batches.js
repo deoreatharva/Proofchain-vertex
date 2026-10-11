@@ -57,10 +57,11 @@
               <span class="mono" style="font-size: 0.76rem; color: var(--color-secondary);">Batch: ${batch.batch_id}</span>
             </div>
             <div class="tree-dag" id="treeDag-${index}">Generating DAG layout...</div>
-            <div style="margin-top: 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+            <div style="margin-top: 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
               <label class="form-label" style="margin-bottom: 0;">Export Leaf Index:</label>
-              <input type="number" class="form-input mono-input" id="leafInput-${index}" style="width: 90px; padding: 6px 10px;" value="0" min="0" max="${Math.max(0, batch.tree_size - 1)}">
+              <input type="number" class="form-input mono-input" id="leafInput-${index}" style="width: 80px; padding: 6px 10px;" value="0" min="0" max="${Math.max(0, batch.tree_size - 1)}">
               <button class="btn btn-sm btn-outline" id="exportProofBtn-${index}">Download Proof Bundle</button>
+              <button class="btn btn-sm" id="verifyProofBtn-${index}">Forward to Verifier</button>
             </div>
           </div>
         </td>
@@ -106,6 +107,35 @@
         a.click();
         a.remove();
         URL.revokeObjectURL(url);
+      });
+
+      // Forward to Verifier handler
+      const verifyBtn = drawerTr.querySelector('#verifyProofBtn-' + index);
+      verifyBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const leafInput = drawerTr.querySelector('#leafInput-' + index);
+        const selectedIndex = parseInt(leafInput.value, 10) || 0;
+
+        if (!batch.leaves || batch.leaves.length === 0) {
+          alert('Batch contains no registered leaves.');
+          return;
+        }
+
+        const boundedIndex = Math.min(Math.max(0, selectedIndex), batch.leaves.length - 1);
+        const tree = await ProofChainCrypto.buildMerkleTree(batch.leaves);
+        const proofBundle = await ProofChainCrypto.generateProofBundle(tree, boundedIndex, 'proofchain/v1/file', batch.batch_id);
+
+        // Find matching registered doc text if available
+        const docs = ProofChainStore.getRegisteredDocs();
+        const matchedDoc = docs.find(d => d.fingerprint === batch.leaves[boundedIndex]);
+
+        ProofChainStore.setPendingVerification({
+          documentText: matchedDoc ? matchedDoc.fileName : 'Sample Document for Leaf ' + boundedIndex,
+          proofBundle: proofBundle,
+          publishedRoot: batch.root
+        });
+
+        window.location.href = 'verify.html';
       });
     });
   }

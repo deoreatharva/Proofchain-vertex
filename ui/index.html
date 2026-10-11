@@ -30,8 +30,21 @@
           SHA-256 canonical fingerprinting, Merkle tree batching, Ed25519 checkpoint signing, and independent witness anchoring. Client-side provable document integrity without reliance on centralized databases.
         </p>
         <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-          <a href="register.html" class="btn">Register Document</a>
-          <a href="verify.html" class="btn btn-outline">Verify Proof Bundle</a>
+          <a href="register.html" class="btn">Start Guided Walkthrough</a>
+          <a href="verify.html" class="btn btn-outline">Standalone Verifier</a>
+        </div>
+
+        <div style="margin-top: 32px; padding: 18px 20px; background: var(--vanilla-200); border: 1px solid var(--color-border-light); border-radius: var(--radius);">
+          <p class="section-label" style="margin-bottom: 8px;">End-to-End Verification Pipeline</p>
+          <div style="display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 0.8rem;">
+            <div><strong>Step 1:</strong> Ingest &amp; Fingerprint Document</div>
+            <div>&rarr;</div>
+            <div><strong>Step 2:</strong> Anchor to Merkle Batch DAG</div>
+            <div>&rarr;</div>
+            <div><strong>Step 3:</strong> Client-Side WebCrypto Proof Verification</div>
+            <div>&rarr;</div>
+            <div><strong>Step 4:</strong> Live Ledger Tamper Audit</div>
+          </div>
         </div>
       </section>
 
@@ -115,5 +128,6 @@
     </footer>
 
   </div>
+  <script type="module" src="js/theme.js"></script>
 </body>
 </html>

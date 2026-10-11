@@ -24,6 +24,14 @@
       <h1 class="page-title">Standalone Verifier</h1>
       <p class="page-subtitle">Client-side document and proof verification executed directly in your browser using the WebCrypto API. Operates independently of database connections or network requests.</p>
 
+      <div style="display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; align-items: center;">
+        <span class="section-label" style="margin: 0;">Test Presets:</span>
+        <button class="btn btn-sm btn-outline" id="presetValidBtn">Valid Credential</button>
+        <button class="btn btn-sm btn-outline" id="presetModifiedBtn">Tampered File</button>
+        <button class="btn btn-sm btn-outline" id="presetSiblingBtn">Corrupted Proof Sibling</button>
+        <button class="btn btn-sm btn-outline" id="presetMismatchBtn">Root Mismatch</button>
+      </div>
+
       <!-- Input Form: 3 Independent Dropzones / Inputs -->
       <div class="card">
         <div class="card-header">
@@ -188,6 +196,10 @@
           <div class="advisory-label">System Advisory Note (Non-Authoritative)</div>
           <div class="advisory-text" id="advisoryText"></div>
         </div>
+
+        <div style="margin-top: 20px; text-align: right;">
+          <a href="audit.html" class="btn">Proceed to Audit &amp; Tamper Demo</a>
+        </div>
       </div>
 
     </main>
@@ -198,7 +210,9 @@
 
   </div>
 
+  <script type="module" src="js/theme.js"></script>
   <script type="module" src="js/crypto.js"></script>
+  <script type="module" src="js/state.js"></script>
   <script type="module" src="js/verify.js"></script>
 </body>
 </html>
