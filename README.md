@@ -1,171 +1,52 @@
-# ProofChain
+# ProofChain: Verifiable Records & Tamper Detection (Vortexa 3.0, B-01)
 
-> Cryptographic document integrity verification system built on Merkle tree proofs and ledger anchoring.
+Registers documents, groups them into batches under a Merkle root, publishes each root to dual append-only,
+hash-chained logs kept **outside** the registry, and lets an independent verifier check one document using only
+the document, its proof and the published root.
 
-## Overview
+## Run
+    pip install -r requirements.txt
+    uvicorn app:app --reload          # open http://127.0.0.1:8000
+    python -m pytest -q               # 47 tests passing
 
-ProofChain is a tamper-evident document registry that utilizes SHA-256 canonical fingerprinting, Merkle tree batching, Ed25519 checkpoint signing, and independent witness anchoring to provide client-side provable document integrity.
+## Design
+- **Fingerprint:** SHA-256 of a canonical form. Binary files = raw bytes. Text files (.txt .md .csv .json .xml .html) = UTF-8 without BOM,
+  `\n` line endings, trailing spaces removed, outer blank lines trimmed, one final newline.
+- **Merkle tree:** leaf = `SHA256(0x00 || doc_hash)`, node = `SHA256(0x01 || left || right)`. Domain prefixes block second-preimage attacks.
+  An odd node is promoted unchanged (never duplicated).
+- **Hardened Proof (RFC 9162):** JSON contains `batch_id`, `doc_hash`, `leaf_index`, `tree_size`, sibling hashes list, and `root`.
+  Directions are dynamically derived at verification time using `leaf_index` and `tree_size` bit shifts. Path length consistency is verified implicitly.
+- **Dual Published Roots Logs:** `published/roots.log` and independent `mirror/roots.log`, one JSON line per batch, each committing to the previous line's hash.
+  Verifier checks internal chain integrity of both logs and alerts if they diverge. Anchor hash displayed in UI guards against truncation attacks.
+- **3-Party Consent Workflow (`/login`):** Registrar (issuer) -> Candidate (credential owner) -> Verifier (third party), with 1-click demo logins.
+  1. The **Registrar** registers a document and assigns it to a **Candidate**, then publishes the batch. Every record commits a human audit stamp (`confirmed_by`, `confirmed_at`) taken from the signed-in registrar.
+  2. The **Candidate** has a *My Document Vault* (everything issued in their name, and who it is shared with) and an *Access Requests* inbox.
+  3. A **Verifier** can browse a directory (no fingerprints) but cannot open any document or proof. They send an **access request**.
+  4. The Candidate clicks **Approve Access** or **Decline** (an approved request can be **revoked** later; a declined one is final, the verifier must ask again).
+  5. Once approved, the Verifier unlocks the document and `.proof.json` and clicks **Verify Cryptographically** (server `/api/verify`, or the offline `/verify` page).
+  - Gatekeeper on `/api/file/{id}`, `/api/proof/{id}` and `/api/verify-record/{id}`: registrar/admin, or the record's candidate, or a verifier with an *approved* request. Everyone else gets 401/403. The auditor sees registry metadata and audits but not contents.
+  - Identities are taken from the login session and from the record, never from request fields, so a verifier cannot pretend to be another verifier or candidate.
+  - Demo accounts (hardcoded, **demo only**): `Atharva`/`1234` (Chief Registrar), `candidate`/`1234` (Aarav Kulkarni), `verifier`/`1234` (TechCorp HR); also `registrar`/`password123`, `auditor`/`password123`, `meera`/`1234` (second candidate), `recruiter`/`1234` (second verifier), `admin`/`admin`.
+  - Consent controls access to documents; it does not change the cryptography. `core.py`, `verify.py` and the Merkle/RFC 9162 logic are untouched.
+- **Independent Verifier:** `verify.py` uses the standard library only and never opens the registry DB.
+      python verify.py --doc a.txt --proof a.txt.proof.json --log published/roots.log [--log2 mirror/roots.log] [--anchor HEAD]
+      python verify.py --doc a.txt --proof a.txt.proof.json --root <64-hex>
+  Failure codes: `PROOF_INVALID`, `DOC_MODIFIED`, `ROOT_MISMATCH`, `ROOT_NOT_PUBLISHED`, `LOG_TAMPERED`.
+- **Zero-Trust Browser Verifier (`/verify`):** 100% client-side verification using the W3C WebCrypto API. Operates entirely offline with zero server calls.
+- **Architecture Comparison Panel:** Direct side-by-side test showing how naive systems (hashes stored in DB) pass blindly when an insider rewrites both document and database, while ProofChain rejects the tamper with `ROOT_MISMATCH`.
+- **Registry Audit:** Recomputes every stored file's hash, rebuilds every root from DB, checks DB root vs published root, and validates dual-log agreement.
+- **AI (optional):** Suggests issuer, date, and document type. Falls back to local regex rules when no API key is present. A human must confirm every field; AI never touches verification.
 
-## Architecture
+## Demo (about 2 minutes, three roles)
+1. Sign in as **Chief Registrar (Atharva)** > **Audit and demo** > *Load 5 sample certificates* (each is issued to the person named inside it; certificate_1 belongs to Aarav Kulkarni). Optionally **Register** another document for Aarav and publish it.
+2. **Switch Role** > **Candidate (Aarav Kulkarni)**: *My Document Vault* shows only Aarav's credentials.
+3. **Switch Role** > **Verifier (TechCorp HR)**: *Request Document Access* > **Request access** on Aarav's certificate. Opening it is refused (403) and *Approved Documents* is empty.
+4. **Switch Role** > **Candidate**: *Access Requests (1)* > **Approve Access**.
+5. **Switch Role** > **Verifier**: *Approved Documents to Verify* > **Verify Cryptographically**: **Verified**.
+6. Back as the Candidate, **Revoke access**: the verifier is locked out again.
+7. Tamper demo (as Registrar): click **Edit document and rewrite database**, then **Compare Architectures**: naive DB check **FOOLED**, ProofChain **CAUGHT: ROOT_MISMATCH**. **Edit the roots log** gives **LOG_TAMPERED**.
+8. Open the **Zero-Trust WebCrypto Verifier** (`/verify`) to verify a document and proof 100% offline.
 
-```
-+---------------------------------------------------------+
-|                  ProofChain Frontend                    |
-+--------------+--------------+------------+--------------+
-|  /register   |  /batches    |  /verify   |   /audit     |
-|  Ingestion   |  Ledger      | Standalone |   Tamper     |
-|  & Register  |  Status      | Verifier   |   Demo       |
-+--------------+--------------+------------+--------------+
-|              WebCrypto (crypto.subtle)                  |
-|              SHA-256 | Merkle Trees | RFC 8785          |
-+---------------------------------------------------------+
-```
-
-## Design System Constraints
-
-- **Color Palette:** Grayscale only (`#000000` primary text/borders, `#FFFFFF` background, `#71717A` secondary text, `#F4F4F5` muted fill). No gradients, no accent colors.
-- **Typography:** System Sans-Serif (Inter, system-ui, -apple-system) for labels; System Monospace (ui-monospace, Courier New) for hex digests, byte representations, and error codes.
-- **Component Styling:** Flat 1px solid borders (border-neutral-900), zero box-shadows, rectangular containers (0px or 2px border radius).
-- **Zero Decorative Indicators:** Pure computation outputs and protocol failure codes displayed directly.
-
----
-
-## Core Views Overview
-
-### 1. Registration & Ingestion View (`ui/register.html`)
-
-Handles document ingestion, canonicalization, advisory AI metadata review, and fingerprint generation.
-
-**Inputs and Controls:**
-- **File Upload Area:** Accepts binary files (PDF, images) or structured JSON payloads.
-- **Canonical Format Selector:**
-  - `proofchain/v1/file`
-  - `RFC 8785 (JSON Canonicalization Scheme)`
-  - `UTF-8 NFC Plain Text`
-- **AI Metadata Review Drawer:**
-  - Model-extracted fields: `issuer`, `date`, `document_type`, `category`.
-  - Required Header: `AI-Generated Advisory Metadata`.
-  - Action Controls: Inline edit inputs and `Confirm Metadata` button (records `confirmed_by` and `confirmed_at`).
-- **Output Container:**
-  - Computed Fingerprint Box: Monospace read-only text displaying `SHA-256(tag || canonical_bytes)` (64 hex characters).
-  - Status Badge: `PENDING_BATCH`.
-  - Ingestion Action: Dynamically assigns document to active batch and exports proof bundle.
-
----
-
-### 2. Batch & Ledger Status View (`ui/batches.html`)
-
-Displays batched checkpoint records anchored to ledger witnesses.
-
-**Batch Ledger Schema:**
-
-| Field | Type / Format | Description |
-| --- | --- | --- |
-| `batch_id` | String (`YYYY-MM-BXXXX`) | Checkpoint batch identifier |
-| `tree_size` | Integer | Total registered leaves in batch |
-| `root` | 64 Hex Characters | Merkle root hash |
-| `prev_checkpoint_hash` | 64 Hex Characters | Previous checkpoint hash in chain |
-| `timestamp` | ISO-8601 UTC String | Checkpoint creation timestamp |
-| `signature` | Ed25519 Hex / Base64 | Checkpoint signature |
-| `state` | `PENDING` \| `SEALED` \| `ANCHORED` | Ledger lifecycle state |
-
-**Batch Detail Drawer:**
-- **Merkle Tree DAG:** Tree layout mapping Leaf Hashes (`0x00 || fingerprint`) to Interior Nodes (`0x01 || left || right`) up to root.
-- **Export Action:** Generates and downloads standard proof bundle JSON for any selected leaf index.
-
----
-
-### 3. Standalone Verifier View (`ui/verify.html`)
-
-Operates entirely client-side via WebCrypto (`crypto.subtle`) without database or network connections.
-
-**Input Form (3 Independent Dropzones / Inputs):**
-1. **Document Input:** Raw file upload or plain text input.
-2. **Proof Bundle Input:** JSON file drop or paste:
-```json
-{
-  "version": "proofchain-proof/1",
-  "canonicalization": "string",
-  "fingerprint": "string (64 hex)",
-  "leaf_index": 0,
-  "tree_size": 0,
-  "path": ["string (64 hex)"],
-  "claimed_root": "string (64 hex)",
-  "batch_id": "string"
-}
-```
-3. **Published Root Input:** Text field for 64-hex root string or Checkpoint JSON.
-
-**Step-by-Step Diagnostic Stepper:**
-
-| Step | Protocol Check | Official Failure Code |
-| --- | --- | --- |
-| V0 | Input Well-Formedness Checks | `MALFORMED_INPUT` |
-| V1 | Canonicalization Parser Checks | `UNSUPPORTED_FORMAT` |
-| V2 | Raw File SHA-256 == Proof Fingerprint | `DOCUMENT_MODIFIED` |
-| V3 | Leaf Index & Path Length Bounds | `INVALID_PROOF` |
-| V4 | Recomputed Path == Claimed Root | `INVALID_PROOF` |
-| V5 | Recomputed Root == Published Root | `ROOT_MISMATCH` |
-| V6 | Checkpoint Ed25519 & Chain Validity | `CHECKPOINT_INVALID` |
-
-**Verification Results Pane:**
-- **Final Verdict Display:** Monospace heading displaying `VERDICT: VALID` or `VERDICT: FAILED`.
-- **Failure Code List:** Ordered list of all failed codes (primary code first).
-- **Hash Inspection Panel (Side-by-Side):**
-  - Computed Document SHA-256
-  - Claimed Proof Fingerprint
-  - Recomputed Merkle Root
-  - Published Reference Root
-- **Advisory Explanation Box:**
-  - Header: `System Advisory Note (Non-Authoritative)`
-
----
-
-### 4. Audit & Tamper Demonstration View (`ui/audit.html`)
-
-Evaluation and verification testing environment.
-
-- **Side-by-Side Verification Comparison:**
-  - **Column A (Naive Registry):** Internal database check (`document hash stored directly beside record`).
-  - **Column B (ProofChain):** External ledger verification anchored to independent witnesses.
-- **Tamper Simulation Buttons:**
-  - **Corrupt 1 Byte in File:** Triggers `DOCUMENT_MODIFIED`.
-  - **Corrupt Proof Sibling Hash:** Triggers `INVALID_PROOF`.
-  - **Modify Database Record & Rebuild DB Root:** Demonstrates Naive system passing while ProofChain halts with `ROOT_MISMATCH`.
-- **Subtree Mismatch Locator:**
-  - Displays the exact node where local database hash diverged from published root via tree audit traversal.
-
----
-
-## Project Structure
-
-```
-Proofchain-vertex/
-├── index.html              # Entry forwarder redirecting to ui/index.html
-├── ui/                     # Compiled UI application folder
-│   ├── index.html          # Shell and navigation entry point
-│   ├── register.html       # View 1: Ingestion & Registration
-│   ├── batches.html        # View 2: Batch & Ledger Status
-│   ├── verify.html         # View 3: Standalone Client-Side Verifier
-│   ├── audit.html          # View 4: Audit & Tamper Demonstration
-│   ├── css/
-│   │   └── style.css       # Specification-compliant grayscale design system
-│   └── js/
-│       ├── crypto.js       # WebCrypto engine (SHA-256, Merkle DAG, RFC 8785)
-│       ├── state.js        # Dynamic ledger storage and proof generator
-│       ├── register.js     # View 1 controller
-│       ├── batches.js      # View 2 controller
-│       ├── verify.js       # View 3 controller
-│       └── audit.js        # View 4 controller
-└── README.md
-```
-
-## Running the Application
-
-Open `index.html` or `ui/index.html` in any modern web browser:
-
-```bash
-open index.html
-```
-
-All cryptographic operations run directly in the client using the browser's native `crypto.subtle` API.
+## Honest limits
+Verification proves a document matches a registered reference. It does not prove who created it or that its contents are true.
+No public blockchain is required; the dual append-only logs stand in for external immutable storage.
