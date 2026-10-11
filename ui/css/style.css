@@ -1,6 +1,6 @@
 /*
    ProofChain Design System
-   Grayscale Flat UI — Specification Compliant
+   Color Theme: Midnight Indigo & Vanilla Exclusive
 */
 
 *, *::before, *::after {
@@ -10,12 +10,33 @@
 }
 
 :root {
-  --color-primary: #000000;
-  --color-bg: #FFFFFF;
-  --color-secondary: #71717A;
-  --color-muted: #F4F4F5;
-  --color-border: #18181B;
-  --color-border-light: #D4D4D8;
+  /* Midnight Indigo Palette */
+  --indigo-950: #0a0e28;
+  --indigo-900: #131b47;
+  --indigo-800: #1b255e;
+  --indigo-700: #263378;
+  --indigo-600: #3b4998;
+  --indigo-500: #55639e;
+  --indigo-300: #8893c5;
+  --indigo-100: #d2d6ee;
+
+  /* Vanilla Palette */
+  --vanilla-50:  #fdfcf8;
+  --vanilla-100: #f8f5eb;
+  --vanilla-200: #eee7d5;
+  --vanilla-300: #dfd5bd;
+  --vanilla-400: #c9bea3;
+
+  /* Semantic Theme Variables */
+  --color-primary: #131b47;
+  --color-primary-hover: #1b255e;
+  --color-bg: #f8f5eb;
+  --color-card-bg: #fdfcf8;
+  --color-secondary: #55639e;
+  --color-muted: #eee7d5;
+  --color-border: #131b47;
+  --color-border-light: #dfd5bd;
+
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
   --radius: 2px;
@@ -50,6 +71,7 @@ body {
   padding: 40px 24px;
 }
 
+/* Navigation */
 .top-nav {
   border-bottom: 1px solid var(--color-border);
   padding: 0 24px;
@@ -65,8 +87,8 @@ body {
 
 .nav-logo {
   font-weight: 700;
-  font-size: 1rem;
-  letter-spacing: 0.5px;
+  font-size: 1.05rem;
+  letter-spacing: 0.6px;
   text-decoration: none;
   color: var(--color-primary);
   font-family: var(--font-mono);
@@ -98,15 +120,17 @@ body {
   border-bottom-color: var(--color-primary);
 }
 
+/* Typography */
 .page-title {
-  font-size: 1.6rem;
+  font-size: 1.65rem;
   font-weight: 700;
   letter-spacing: -0.5px;
+  color: var(--color-primary);
   margin-bottom: 6px;
 }
 
 .page-subtitle {
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   color: var(--color-secondary);
   margin-bottom: 32px;
   max-width: 760px;
@@ -126,12 +150,13 @@ body {
   font-size: 0.82rem;
 }
 
+/* Cards */
 .card {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 24px;
   margin-bottom: 20px;
-  background: var(--color-bg);
+  background: var(--color-card-bg);
 }
 
 .card-header {
@@ -149,6 +174,7 @@ body {
   font-size: 0.95rem;
   font-weight: 600;
   letter-spacing: -0.2px;
+  color: var(--color-primary);
   margin: 0;
 }
 
@@ -157,6 +183,7 @@ body {
   border-color: var(--color-border-light);
 }
 
+/* Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -169,19 +196,21 @@ body {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-primary);
-  color: var(--color-bg);
+  color: var(--vanilla-50);
   cursor: pointer;
   text-decoration: none;
   transition: opacity var(--transition), background-color var(--transition);
 }
 
 .btn:hover {
-  opacity: 0.85;
+  background: var(--color-primary-hover);
+  opacity: 0.92;
 }
 
 .btn-outline {
-  background: var(--color-bg);
+  background: var(--color-card-bg);
   color: var(--color-primary);
+  border-color: var(--color-border);
 }
 
 .btn-outline:hover {
@@ -198,6 +227,7 @@ body {
   cursor: not-allowed;
 }
 
+/* Form Elements */
 .form-group {
   margin-bottom: 18px;
 }
@@ -206,6 +236,7 @@ body {
   display: block;
   font-size: 0.78rem;
   font-weight: 600;
+  color: var(--color-primary);
   margin-bottom: 6px;
   letter-spacing: 0.2px;
 }
@@ -217,9 +248,9 @@ body {
   padding: 9px 12px;
   font-size: 0.85rem;
   font-family: var(--font-sans);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-light);
   border-radius: var(--radius);
-  background: var(--color-bg);
+  background: var(--vanilla-50);
   color: var(--color-primary);
   transition: border-color var(--transition);
 }
@@ -250,19 +281,20 @@ body {
 
 .form-select {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 16 16'%3E%3Cpath fill='%2318181B' d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 16 16'%3E%3Cpath fill='%23131b47' d='M8 11L3 6h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   padding-right: 36px;
 }
 
+/* Dropzone */
 .dropzone {
   border: 1px dashed var(--color-border);
   border-radius: var(--radius);
   padding: 36px 20px;
   text-align: center;
   cursor: pointer;
-  background: var(--color-bg);
+  background: var(--vanilla-50);
   transition: background var(--transition), border-color var(--transition);
 }
 
@@ -287,6 +319,7 @@ body {
   margin-top: 4px;
 }
 
+/* Badges */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -310,21 +343,23 @@ body {
 
 .badge-sealed {
   background: var(--color-primary);
-  color: var(--color-bg);
+  color: var(--vanilla-50);
   border-color: var(--color-primary);
 }
 
 .badge-anchored {
-  background: var(--color-bg);
+  background: var(--vanilla-50);
   color: var(--color-primary);
   border-color: var(--color-primary);
+  border-width: 2px;
 }
 
+/* Tables */
 .table-wrap {
   overflow-x: auto;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  background: var(--color-bg);
+  background: var(--color-card-bg);
 }
 
 table {
@@ -352,6 +387,7 @@ td {
   padding: 12px 14px;
   border-bottom: 1px solid var(--color-border-light);
   vertical-align: middle;
+  color: var(--color-primary);
 }
 
 td.mono-cell {
@@ -376,6 +412,7 @@ tr.active-row {
   background: var(--color-muted);
 }
 
+/* Stepper */
 .stepper {
   display: flex;
   flex-direction: column;
@@ -409,11 +446,11 @@ tr.active-row {
 
 .step.pass .step-indicator {
   background: var(--color-primary);
-  color: var(--color-bg);
+  color: var(--vanilla-50);
 }
 
 .step.fail .step-indicator {
-  background: var(--color-bg);
+  background: var(--vanilla-50);
   color: var(--color-primary);
   border-width: 2px;
 }
@@ -431,6 +468,7 @@ tr.active-row {
 .step-title {
   font-size: 0.85rem;
   font-weight: 500;
+  color: var(--color-primary);
 }
 
 .step-code {
@@ -451,13 +489,14 @@ tr.active-row {
 .step.fail .step-result { color: var(--color-primary); font-weight: 700; }
 .step.skip .step-result { color: var(--color-secondary); }
 
+/* Verdict Box */
 .verdict-box {
   text-align: center;
   padding: 24px;
   border: 2px solid var(--color-border);
   border-radius: var(--radius);
   margin: 20px 0;
-  background: var(--color-bg);
+  background: var(--color-card-bg);
 }
 
 .verdict-text {
@@ -465,6 +504,7 @@ tr.active-row {
   font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: 1px;
+  color: var(--color-primary);
 }
 
 .verdict-code {
@@ -474,6 +514,7 @@ tr.active-row {
   margin-top: 6px;
 }
 
+/* Hash Panel */
 .hash-panel {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -501,13 +542,15 @@ tr.active-row {
   font-size: 0.78rem;
   word-break: break-all;
   line-height: 1.4;
+  color: var(--color-primary);
 }
 
 .hash-item.hash-mismatch {
   border: 2px solid var(--color-primary);
-  background: var(--color-bg);
+  background: var(--vanilla-50);
 }
 
+/* Advisory Box */
 .advisory-box {
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius);
@@ -527,10 +570,11 @@ tr.active-row {
 
 .advisory-text {
   font-size: 0.82rem;
-  color: var(--color-secondary);
+  color: var(--color-primary);
   line-height: 1.5;
 }
 
+/* Side by Side Split Columns */
 .split-columns {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -541,7 +585,7 @@ tr.active-row {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 20px;
-  background: var(--color-bg);
+  background: var(--color-card-bg);
 }
 
 .split-col h3 {
@@ -549,6 +593,7 @@ tr.active-row {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.8px;
+  color: var(--color-primary);
   margin-bottom: 12px;
 }
 
@@ -556,9 +601,11 @@ tr.active-row {
   font-family: var(--font-mono);
   font-size: 1rem;
   font-weight: 700;
+  color: var(--color-primary);
   margin-top: 10px;
 }
 
+/* Tamper Simulation Buttons */
 .tamper-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -573,7 +620,7 @@ tr.active-row {
   padding: 16px 14px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  background: var(--color-bg);
+  background: var(--vanilla-50);
   cursor: pointer;
   transition: background var(--transition);
   text-align: left;
@@ -591,6 +638,7 @@ tr.active-row {
 .tamper-btn-title {
   font-size: 0.82rem;
   font-weight: 600;
+  color: var(--color-primary);
 }
 
 .tamper-btn-effect {
@@ -599,16 +647,18 @@ tr.active-row {
   color: var(--color-secondary);
 }
 
+/* Merkle Tree DAG */
 .tree-dag {
   font-family: var(--font-mono);
   font-size: 0.74rem;
   padding: 16px;
-  background: var(--color-muted);
+  background: var(--vanilla-50);
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius);
   overflow-x: auto;
   white-space: pre;
   line-height: 1.6;
+  color: var(--color-primary);
 }
 
 .info-banner {
@@ -617,9 +667,11 @@ tr.active-row {
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius);
   font-size: 0.8rem;
+  color: var(--color-primary);
   margin-bottom: 16px;
 }
 
+/* Responsive */
 @media (max-width: 768px) {
   .main-content {
     padding: 24px 16px;
