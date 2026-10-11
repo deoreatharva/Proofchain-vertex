@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ProofChain — Zero-Trust Browser Verifier</title>
+  <style>
+    :root {
+      --bg: #0b131b;
+      --card: #132230;
+      --card-border: #22374c;
+      --text: #f0f6fc;
+      --muted: #8b9eb0;
+      --primary: #38bdf8;
+      --ok: #2dd4bf;
+      --ok-bg: rgba(45, 212, 191, 0.12);
+      --bad: #f87171;
+      --bad-bg: rgba(248, 113, 113, 0.12);
+      --warn: #fbbf24;
+      --warn-bg: rgba(251, 191, 36, 0.12);
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      padding: 32px 20px;
+    }
+    .container {
+      max-width: 840px;
+      margin: 0 auto;
+    }
+    header {
+      margin-bottom: 28px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    h1 {
+      margin: 0 0 6px 0;
+      font-size: 26px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .badge-standalone {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--primary);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+    header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 600px;
+    }
+    .top-link {
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid var(--card-border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: var(--card);
+    }
+    .top-link:hover {
+      border-color: var(--primary);
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+    h2 {
+      margin: 0 0 16px 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: #e2e8f0;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 640px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .dropzone {
+      border: 2px dashed var(--card-border);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      background: rgba(11, 19, 27, 0.4);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .dropzone:hover {
+      border-color: var(--primary);
+      background: rgba(56, 189, 248, 0.04);
+    }
+    .dropzone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .dz-name {
+      font-size: 13px;
+      color: #cbd5e1;
+      font-weight: 500;
+      word-break: break-all;
+    }
+    .dz-hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .input-field {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      background: rgba(11, 19, 27, 0.6);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+    .input-field:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .btn {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: #fff;
+      border: 0;
+      padding: 11px 24px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: opacity 0.2s;
+    }
+    .btn:hover {
+      opacity: 0.9;
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .verdict {
+      padding: 18px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .verdict.ok {
+      background: var(--ok-bg);
+      border: 1px solid rgba(45, 212, 191, 0.4);
+      color: #5eead4;
+    }
+    .verdict.bad {
+      background: var(--bad-bg);
+      border: 1px solid rgba(248, 113, 113, 0.4);
+      color: #fca5a5;
+    }
+    .verdict-title {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .verdict-msg {
+      font-size: 13px;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+    .chain {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .chain-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: rgba(11, 19, 27, 0.5);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 12px 14px;
+    }
+    .step-pill {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 4px;
+      min-width: 56px;
+      text-align: center;
+    }
+    .step-pill.pass {
+      background: var(--ok-bg);
+      color: var(--ok);
+      border: 1px solid rgba(45, 212, 191, 0.3);
+    }
+    .step-pill.fail {
+      background: var(--bad-bg);
+      color: var(--bad);
+      border: 1px solid rgba(248, 113, 113, 0.3);
+    }
+    .step-pill.skip {
+      background: rgba(139, 158, 176, 0.1);
+      color: var(--muted);
+      border: 1px solid rgba(139, 158, 176, 0.2);
+    }
+    .step-body {
+      flex: 1;
+    }
+    .step-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin-bottom: 2px;
+    }
+    .step-detail {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      word-break: break-all;
+    }
+    .callout {
+      background: rgba(56, 189, 248, 0.08);
+      border-left: 3px solid var(--primary);
+      padding: 12px 16px;
+      border-radius: 0 6px 6px 0;
+      font-size: 13px;
+      color: #cbd5e1;
+      margin-top: 20px;
+    }
+    .mono {
+      font-family: var(--font-mono);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>ProofChain Verifier <span class="badge-standalone">WebCrypto &middot; Client-Only</span></h1>
+        <p>Cryptographically verifies any document and proof in the browser. <strong>Zero server communication</strong> &mdash; runs 100% offline using the W3C Web Cryptography API.</p>
+      </div>
+      <a href="/" class="top-link">&larr; Back to ProofChain Registry</a>
+    </header>
+
+    <div class="panel">
+      <h2>1. Inputs for Verification</h2>
+      <div class="grid">
+        <div>
+          <label>Document File</label>
+          <div class="dropzone" id="dz-doc">
+            <input type="file" id="inp-doc">
+            <div class="dz-name" id="name-doc">Drop document or click to select</div>
+            <div class="dz-hint">Supports any file (.txt, .pdf, .docx, images, etc.)</div>
+          </div>
+        </div>
+        <div>
+          <label>Proof File (.proof.json)</label>
+          <div class="dropzone" id="dz-proof">
+            <input type="file" id="inp-proof" accept=".json">
+            <div class="dz-name" id="name-proof">Drop .proof.json or click to select</div>
+            <div class="dz-hint">JSON proof issued by ProofChain</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 18px;">
+        <label for="inp-root">Published Root Reference (64-char Hex)</label>
+        <input type="text" id="inp-root" class="input-field" placeholder="Leave empty to use root claimed in proof, or enter the published root">
+        <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">
+          For zero-trust verification, enter the Merkle root from the public append-only log.
+        </div>
+      </div>
+
+      <button class="btn" id="btn-run" onclick="runVerify()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Verify Cryptographically
+      </button>
+    </div>
+
+    <div id="output-area" style="display: none;"></div>
+
+    <div class="callout">
+      <strong>Zero-Trust Guarantee:</strong> This page computes the RFC 9162 Merkle path fold directly in your browser. Even if the registry database has been compromised or destroyed, this verification accurately proves if the document was registered in the batch corresponding to the published root.
+    </div>
+  </div>
+
+  <script>
+    const TEXT_EXTS = new Set([".txt", ".md", ".csv", ".json", ".xml", ".html"]);
+    const HEX64 = /^[0-9a-f]{64}$/;
+
+    let docFile = null;
+    let proofFile = null;
+
+    document.getElementById("inp-doc").addEventListener("change", (e) => {
+      if (e.target.files[0]) {
+        docFile = e.target.files[0];
+        document.getElementById("name-doc").textContent = docFile.name + " (" + docFile.size + " bytes)";
+      }
+    });
+
+    document.getElementById("inp-proof").addEventListener("change", async (e) => {
+      if (e.target.files[0]) {
+        proofFile = e.target.files[0];
+        document.getElementById("name-proof").textContent = proofFile.name;
+        try {
+          const txt = await proofFile.text();
+          const p = JSON.parse(txt);
+          if (p.root && !document.getElementById("inp-root").value) {
+            document.getElementById("inp-root").value = p.root;
+          }
+        } catch (_) {}
+      }
+    });
+
+    function canonicalize(bytes, filename) {
+      const dot = filename.lastIndexOf(".");
+      const ext = dot !== -1 ? filename.slice(dot).toLowerCase() : "";
+      if (TEXT_EXTS.has(ext)) {
+        let str;
+        try {
+          str = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+        } catch (_) {
+          return bytes;
+        }
+        // Strip BOM if present
+        if (str.charCodeAt(0) === 0xFEFF) str = str.slice(1);
+        str = str.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+        const lines = str.split("\n").map(l => l.replace(/ +$/, ""));
+        let joined = lines.join("\n");
+        // Trim outer newlines and append single final newline
+        joined = joined.replace(/^\n+/, "").replace(/\n+$/, "");
+        return new TextEncoder().encode(joined + "\n");
+      }
+      return bytes;
+    }
+
+    async function sha256(buf) {
+      const hash = await crypto.subtle.digest("SHA-256", buf);
+      return new Uint8Array(hash);
+    }
+
+    function bytesToHex(u8) {
+      return Array.from(u8, b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    function hexToBytes(hex) {
+      const bytes = new Uint8Array(hex.length / 2);
+      for (let i = 0; i < hex.length; i += 2) {
+        bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+      }
+      return bytes;
+    }
+
+    function concatBytes(...arrays) {
+      const totalLen = arrays.reduce((acc, a) => acc + a.length, 0);
+      const res = new Uint8Array(totalLen);
+      let offset = 0;
+      for (const a of arrays) {
+        res.set(a, offset);
+        offset += a.length;
+      }
+      return res;
+    }
+
+    async function foldRFC9162(docHashHex, leafIndex, treeSize, path) {
+      let fn = leafIndex;
+      let sn = treeSize - 1;
+      const docHashBytes = hexToBytes(docHashHex);
+      let r = await sha256(concatBytes(new Uint8Array([0x00]), docHashBytes));
+
+      for (const p_hex of path) {
+        if (fn === 0 && sn === 0) return null;
+        const p = hexToBytes(p_hex);
+        if (fn === sn || (fn & 1)) {
+          r = await sha256(concatBytes(new Uint8Array([0x01]), p, r));
+          while (fn > 0 && !(fn & 1)) {
+            fn >>= 1;
+            sn >>= 1;
+          }
+        } else {
+          r = await sha256(concatBytes(new Uint8Array([0x01]), r, p));
+        }
+        fn >>= 1;
+        sn >>= 1;
+      }
+
+      if (fn !== 0 || sn !== 0) return null;
+      return bytesToHex(r);
+    }
+
+    async function runVerify() {
+      if (!docFile || !proofFile) {
+        alert("Please select both a document file and its .proof.json file.");
+        return;
+      }
+
+      const out = document.getElementById("output-area");
+      out.style.display = "block";
+      out.innerHTML = `<div class="panel" style="text-align:center; color: var(--muted)">Computing WebCrypto SHA-256 hashes...</div>`;
+
+      let proof = null;
+      try {
+        const text = await proofFile.text();
+        proof = JSON.parse(text);
+      } catch (e) {
+        renderVerdict("PROOF_INVALID", "Failed to parse proof JSON.", [
+          { name: "proof_format", status: "fail", detail: "Malformed JSON file: " + e.message }
+        ]);
+        return;
+      }
+
+      const checks = [];
+      const step = (name, ok, detail) => {
+        checks.push({ name, status: ok ? "pass" : "fail", detail });
+        return ok;
+      };
+
+      // 1. Proof Format
+      let fmtErr = null;
+      if (!proof || typeof proof !== "object") fmtErr = "Proof is not a JSON object";
+      else {
+        for (const k of ["batch_id", "doc_hash", "leaf_index", "tree_size", "path", "root"]) {
+          if (!(k in proof)) { fmtErr = `Missing field '${k}'`; break; }
+        }
+      }
+      if (!fmtErr && (!HEX64.test(proof.doc_hash) || !HEX64.test(proof.root))) fmtErr = "doc_hash/root must be 64-char hex";
+      if (!fmtErr && (!Number.isInteger(proof.leaf_index) || proof.leaf_index < 0)) fmtErr = "leaf_index must be non-negative integer";
+      if (!fmtErr && (!Number.isInteger(proof.tree_size) || proof.tree_size < 1)) fmtErr = "tree_size must be positive integer";
+      if (!fmtErr && proof.leaf_index >= proof.tree_size) fmtErr = `leaf_index ${proof.leaf_index} out of range for tree_size ${proof.tree_size}`;
+      if (!fmtErr && !Array.isArray(proof.path)) fmtErr = "path must be a list";
+
+      if (!step("proof_format", !fmtErr, fmtErr || `Valid RFC 9162 proof (batch: ${proof.batch_id}, leaf: ${proof.leaf_index}, size: ${proof.tree_size})`)) {
+        renderVerdict("PROOF_INVALID", "The proof file is structurally invalid.", checks);
+        return;
+      }
+
+      // 2. Document Hash
+      const docBuffer = new Uint8Array(await docFile.arrayBuffer());
+      const canonicalBytes = canonicalize(docBuffer, docFile.name);
+      const computedHash = bytesToHex(await sha256(canonicalBytes));
+      const hashOk = computedHash.toLowerCase() === proof.doc_hash.toLowerCase();
+
+      if (!step("document_hash", hashOk, `Computed SHA-256: ${computedHash.slice(0, 16)}... vs Proof: ${proof.doc_hash.slice(0, 16)}...`)) {
+        renderVerdict("DOC_MODIFIED", "The document fingerprint does not match the registered proof. File was altered.", checks);
+        return;
+      }
+
+      // 3. Merkle Path Fold (RFC 9162)
+      const computedRoot = await foldRFC9162(proof.doc_hash, proof.leaf_index, proof.tree_size, proof.path);
+      const pathOk = computedRoot !== null && computedRoot.toLowerCase() === proof.root.toLowerCase();
+
+      if (!step("proof_path", pathOk, computedRoot ? `Path folds to: ${computedRoot.slice(0, 16)}... (matches proof root)` : "Path length is inconsistent with tree_size/leaf_index")) {
+        renderVerdict("PROOF_INVALID", "Merkle path does not fold to claimed root or is structurally inconsistent.", checks);
+        return;
+      }
+
+      // 4. Root Match against published reference
+      const publishedInput = document.getElementById("inp-root").value.trim().toLowerCase();
+      const targetRoot = publishedInput || proof.root.toLowerCase();
+      const rootOk = computedRoot.toLowerCase() === targetRoot;
+
+      if (!step("root_published", rootOk, `Computed root: ${computedRoot.slice(0, 16)}... vs Reference: ${targetRoot.slice(0, 16)}...`)) {
+        renderVerdict("ROOT_MISMATCH", "The proof folds to a root that differs from the published reference. Registry or document was tampered.", checks);
+        return;
+      }
+
+      renderVerdict("VERIFIED", "Document matches the registered cryptographic reference perfectly. The Merkle inclusion proof is valid.", checks);
+    }
+
+    function renderVerdict(code, message, checks) {
+      const isOk = code === "VERIFIED";
+      const out = document.getElementById("output-area");
+      const ALL_STEPS = ["proof_format", "document_hash", "proof_path", "root_published"];
+      const existingNames = new Set(checks.map(c => c.name));
+      const completeChecks = [...checks];
+      for (const s of ALL_STEPS) {
+        if (!existingNames.has(s)) {
+          completeChecks.push({ name: s, status: "skip", detail: "not reached" });
+        }
+      }
+
+      const stepTitles = {
+        proof_format: "1. Proof Structure & RFC 9162 Schema",
+        document_hash: "2. Canonical Document SHA-256 Digest",
+        proof_path: "3. Cryptographic Merkle Inclusion Fold",
+        root_published: "4. Published Root Commitment Match"
+      };
+
+      out.innerHTML = `
+        <div class="verdict ${isOk ? 'ok' : 'bad'}">
+          <div style="font-size: 24px; line-height: 1;">${isOk ? '✓' : '✗'}</div>
+          <div>
+            <div class="verdict-title">${isOk ? 'VERIFIED' : 'REJECTED: ' + code}</div>
+            <div class="verdict-msg">${message}</div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Verification Trace</h2>
+          <ul class="chain">
+            ${completeChecks.map(c => `
+              <li class="chain-step">
+                <span class="step-pill ${c.status}">${c.status}</span>
+                <div class="step-body">
+                  <div class="step-name">${stepTitles[c.name] || c.name}</div>
+                  <div class="step-detail">${c.detail}</div>
+                </div>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>

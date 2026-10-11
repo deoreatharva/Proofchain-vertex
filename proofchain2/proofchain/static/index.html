@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ProofChain — Verifiable Records & Tamper Detection</title>
+<style>
+:root{--bg:#eef2f4;--ink:#12222c;--mute:#5b6b75;--line:#c9d3d9;--panel:#fff;--ok:#0b6b66;--okbg:#e2f3f1;--bad:#b42318;--badbg:#fde8e6;--warn:#8a5a00;--warnbg:#fff3d6;--accent:#0369a1;--accentbg:#e0f2fe}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+header{padding:24px 6vw 12px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px}
+h1{margin:0;font-size:28px;letter-spacing:-.5px}header p{margin:4px 0 0;color:var(--mute);max-width:65ch}
+.header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.user-pill{background:#fff;border:1px solid var(--line);padding:6px 14px;border-radius:99px;font-size:13px;display:inline-flex;align-items:center;gap:8px;font-weight:500}
+.user-pill .dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
+.user-pill .dot.guest{background:var(--mute)}
+.top-action{background:var(--accentbg);color:var(--accent);border:1px solid rgba(3,105,161,0.3);text-decoration:none;padding:7px 14px;border-radius:6px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.top-action:hover{background:#bae6fd}
+.top-action.subtle{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.top-action.subtle:hover{background:#f1f5f9}
+nav{display:flex;gap:4px;padding:0 6vw;border-bottom:1px solid var(--line);flex-wrap:wrap}
+nav button{background:none;border:0;padding:10px 16px;font:inherit;color:var(--mute);cursor:pointer;border-bottom:3px solid transparent}
+nav button[aria-selected=true]{color:var(--ink);border-color:var(--ok);font-weight:600}
+main{padding:22px 6vw 60px;max-width:1100px}section{display:none}section.on{display:block}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin-bottom:16px}
+h2{font-size:16px;margin:0 0 12px;font-weight:700}label{display:block;font-size:13px;color:var(--mute);margin:10px 0 3px}
+input[type=text],input[type=file]{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;font:inherit;background:#fff}
+button.btn{background:var(--ink);color:#fff;border:0;border-radius:6px;padding:9px 16px;font:inherit;cursor:pointer;margin:12px 8px 0 0;font-weight:500}
+button.btn.alt{background:#fff;color:var(--ink);border:1px solid var(--ink)}button.btn.danger{background:var(--bad)}
+button:focus-visible,input:focus-visible{outline:3px solid #7ab8ff;outline-offset:2px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mute);font-weight:600}.mono{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;word-break:break-all}
+.tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;background:var(--warnbg);color:var(--warn);font-weight:500}.tag.pub{background:var(--okbg);color:var(--ok)}
+.note{font-size:13px;color:var(--mute)}.hint{background:var(--warnbg);color:var(--warn);padding:8px 10px;border-radius:6px;font-size:13px;margin-top:10px}
+.verdict{border-radius:6px;padding:14px 16px;margin-bottom:10px;font-weight:600}.verdict.ok{background:var(--okbg);color:var(--ok)}.verdict.bad{background:var(--badbg);color:var(--bad)}
+.chain{list-style:none;margin:0;padding:0;border-left:3px solid var(--line);margin-left:8px}
+.chain li{padding:8px 0 8px 16px;position:relative}.chain li::before{content:"";position:absolute;left:-9px;top:14px;width:15px;height:15px;border-radius:50%;background:#fff;border:3px solid var(--line)}
+.chain li.pass::before{border-color:var(--ok);background:var(--ok)}.chain li.fail::before{border-color:var(--bad);background:var(--bad)}
+.chain li.skip{opacity:.5}.chain b{display:block}.small{font-size:13px;color:var(--mute)}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
+@media (max-width:700px){.compare-grid{grid-template-columns:1fr}}
+.compare-card{border:1px solid var(--line);border-radius:8px;padding:16px;background:#fafbfc}
+.compare-card h3{margin:0 0 8px;font-size:15px}
+.badge{display:inline-block;padding:3px 10px;border-radius:4px;font-size:12px;font-weight:700;margin-bottom:8px}
+.badge.pass{background:var(--okbg);color:var(--ok)}.badge.fail{background:var(--badbg);color:var(--bad)}
+.badge.fooled{background:#fee2e2;color:#991b1b;border:1px solid #f87171}
+.badge.caught{background:#dcfce7;color:#166534;border:1px solid #4ade80}
+.tag.bad{background:var(--badbg);color:var(--bad)}
+button.btn.sm{padding:5px 11px;font-size:13px;margin:2px 6px 2px 0}
+#toast{position:sticky;top:8px;z-index:5;background:var(--badbg);color:var(--bad);border:1px solid #f1b5af;margin:0 0 14px}
+.role-banner{background:var(--accentbg);color:var(--accent);border:1px solid rgba(3,105,161,.25);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:14px}
+.log-status-bar{display:flex;gap:12px;flex-wrap:wrap;background:#f8fafc;padding:10px 14px;border-radius:6px;border:1px solid var(--line);margin-bottom:14px;font-size:13px}
+</style></head><body>
+<header>
+  <div>
+    <h1>ProofChain</h1>
+    <p>Register documents, publish tamper-evident Merkle roots to dual append-only logs, and let anyone verify a single document without trusting the registry database. Candidates decide who may open their credentials.</p>
+  </div>
+  <div class="header-actions">
+    <div id="user-badge" class="user-pill"><span class="dot guest"></span><span>Checking role...</span></div>
+    <a href="/login" id="switch-btn" class="top-action">Switch Role</a>
+    <a href="/login" id="auth-btn" class="top-action subtle">Sign In</a>
+    <a href="/verify" class="top-action" target="_blank">Zero-Trust Verifier &rarr;</a>
+  </div>
+</header>
+<nav role="tablist"></nav>
+<main>
+<div id="toast" class="hint" role="alert" hidden></div>
+<div id="role-banner" class="role-banner" hidden></div>
+<section id="register">
+ <div class="panel">
+  <h2>Add a document</h2>
+  <div id="auth-notice" class="note" style="margin-bottom:12px"></div>
+  <label for="rf">Document</label><input type="file" id="rf">
+  <button class="btn alt" id="readbtn">Suggest details</button>
+  <div id="exnote" class="hint" hidden></div>
+  <label for="cand">Issue to candidate</label>
+  <input type="text" id="cand" list="cand-list" value="Aarav Kulkarni" autocomplete="off"><datalist id="cand-list"></datalist>
+  <div class="note">Pick a candidate or type a new name. Only this candidate, and verifiers they approve, can open the document and its proof.</div>
+  <div class="row"><div><label for="iss">Issuer</label><input type="text" id="iss"></div><div><label for="dd">Date</label><input type="text" id="dd" placeholder="YYYY-MM-DD"></div><div><label for="dt">Type</label><input type="text" id="dt"></div></div>
+  <button class="btn" id="addbtn">Confirm and add to batch</button><span class="note" id="addmsg"></span>
+ </div>
+ <div class="panel"><h2>Pending batch</h2><div id="pending"></div><button class="btn" id="pubbtn">Publish batch</button><span class="note" id="pubmsg"></span></div>
+</section>
+
+<section id="registry"><div class="panel"><h2>Registered documents</h2><div id="records"></div>
+ <p class="note">Download a document and its proof, then check them in the Verify tab, the <a href="/verify" target="_blank">WebCrypto Browser Verifier</a>, or with <span class="mono">python verify.py</span>.</p></div></section>
+
+<section id="vault">
+ <div class="panel"><h2>My Document Vault</h2>
+  <p class="note">Credentials issued in your name. Nobody else can open them unless you approve an access request.</p>
+  <div id="vault-list"></div></div>
+</section>
+
+<section id="requests">
+ <div class="panel"><h2>Access Requests</h2>
+  <p class="note">A verifier must ask you before they can see a document or its proof. You can approve, decline, or revoke an earlier approval at any time.</p>
+  <div id="req-list"></div></div>
+</section>
+
+<section id="directory">
+ <div class="panel"><h2>Request Document Access</h2>
+  <p class="note">Browse published credentials. You cannot open a document or proof until its owner approves your request.</p>
+  <div id="dir"></div></div>
+</section>
+
+<section id="approved">
+ <div class="panel"><h2>Approved Documents to Verify</h2>
+  <p class="note">Documents whose owners approved your request. Verification folds the Merkle proof and checks the root against the published, hash-chained logs. It does not use the registry database.</p>
+  <div id="appr"></div>
+  <p class="note">Prefer to check in your own browser? Download the document and proof, then open the <a href="/verify" target="_blank">Zero-Trust Verifier</a>; it works offline.</p></div>
+ <div id="apprres"></div>
+</section>
+
+<section id="verify"><div class="panel"><h2>Verify a document (Server Endpoint)</h2>
+ <div class="row"><div><label for="vd">Document</label><input type="file" id="vd"></div><div><label for="vp">Proof file (.proof.json)</label><input type="file" id="vp"></div></div>
+ <div class="row"><div><label for="vr">Published root (optional, overrides the log)</label><input type="text" id="vr" class="mono"></div><div><label for="va">Anchor hash (optional)</label><input type="text" id="va" class="mono"></div></div>
+ <button class="btn" id="vbtn">Verify</button></div><div id="vresult"></div>
+ <p class="note">Tip: Want 100% offline client-side verification? Try our <a href="/verify" target="_blank">Standalone WebCrypto Verifier</a>.</p></section>
+
+<section id="audit">
+ <div class="panel staff-only"><h2>Registry audit</h2><button class="btn" id="abtn">Run audit</button><div id="aresult"></div></div>
+
+ <div class="panel">
+  <h2>Published roots & Dual-Log Consensus</h2>
+  <div id="log-status" class="log-status-bar"></div>
+  <div id="log"></div>
+ </div>
+
+ <div class="panel staff-only">
+  <h2>Architecture Comparison: ProofChain vs. Naive Database</h2>
+  <p class="note">See how a naive system (storing document hashes in a database) is completely fooled by an insider attack, while ProofChain's external roots log catches it.</p>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+    <label for="cmp-id" style="margin:0">Record #:</label>
+    <input type="text" id="cmp-id" value="1" style="max-width:80px">
+    <button class="btn alt" id="cmpbtn" style="margin:0">Compare Architectures</button>
+  </div>
+  <div id="cmp-result"></div>
+ </div>
+
+ <div class="panel staff-only"><h2>Demo controls</h2><p class="note">Simulate a dishonest custodian to see the verifier reject it.</p>
+  <button class="btn alt" id="seedbtn">Load 5 sample certificates</button>
+  <label for="atk">Record number to attack</label><input type="text" id="atk" value="1" style="max-width:120px">
+  <button class="btn danger" id="atkbtn">Edit document and rewrite database</button>
+  <button class="btn danger" id="logbtn">Edit the roots log (cause mirror disagreement)</button>
+  <button class="btn alt" id="rstbtn">Reset everything</button><div id="dmsg" class="note"></div></div>
+</section>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const nav=$("nav");
+const TAB_SETS={
+  registrar:[["register","Register"],["registry","Registry"],["verify","Verify"],["audit","Audit and demo"]],
+  auditor:[["registry","Registry"],["verify","Verify"],["audit","Audit and demo"]],
+  candidate:[["vault","My Document Vault"],["requests","Access Requests"],["verify","Verify"]],
+  verifier:[["directory","Request Document Access"],["approved","Approved Documents to Verify"],["verify","Verify"]],
+  public:[["verify","Verify"],["audit","Published roots"]]
+};
+TAB_SETS.admin=TAB_SETS.registrar;
+const BANNERS={
+  registrar:"You are the <b>Registrar (Issuer)</b>. Register a document, assign it to a candidate, then publish the batch. You can always open any document and proof.",
+  admin:"You are the <b>Administrator</b>. You have the same access as a registrar.",
+  auditor:"You are the <b>Auditor</b>. You can inspect the registry, logs and audits, but not open document contents.",
+  candidate:"You are the <b>Candidate (credential owner)</b>. Your documents stay private until you approve a verifier's request.",
+  verifier:"You are a <b>Verifier</b>. Request access to a candidate's document; once they approve it you can verify it cryptographically."
+};
+function buildTabs(){
+  nav.innerHTML="";
+  const set=TAB_SETS[currentUser.role]||TAB_SETS.public;
+  set.forEach(([id,t])=>{const b=document.createElement("button");b.textContent=t;b.role="tab";b.onclick=()=>show(id);b.dataset.id=id;b.dataset.label=t;nav.append(b)});
+  const oversight=["registrar","admin","auditor"].includes(currentUser.role);
+  document.querySelectorAll(".staff-only").forEach(e=>e.hidden=!oversight);
+  const bn=$("#role-banner");bn.hidden=!BANNERS[currentUser.role];bn.innerHTML=BANNERS[currentUser.role]||"";
+  return set[0][0];
+}
+function oops(e){const t=$("#toast");t.textContent=(e&&e.message)||String(e);t.hidden=false;clearTimeout(oops.t);oops.t=setTimeout(()=>{t.hidden=true},7000)}
+function show(id){
+  document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id===id));
+  nav.querySelectorAll("button").forEach(b=>b.setAttribute("aria-selected",b.dataset.id===id));
+  const loaders={registry:loadRecords,register:()=>{loadCandidates();return loadPending()},audit:loadLog,
+                 vault:loadVault,requests:loadRequests,directory:loadDirectory,approved:loadApproved};
+  if(loaders[id])Promise.resolve().then(loaders[id]).catch(oops);
+}
+function setBadge(n){const b=nav.querySelector('button[data-id="requests"]');if(b)b.textContent=n?`${b.dataset.label} (${n})`:b.dataset.label}
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+async function api(p,o){const r=await fetch(p,o);const j=await r.json().catch(()=>({}));if(r.status===401&&currentUser.role!=="public"){location.href="/login"}if(!r.ok)throw new Error(typeof j.detail==="string"?j.detail:(r.statusText||"Request failed"));return j}
+const short=h=>h?h.slice(0,16)+"…":"";
+function fd(o){const f=new FormData();for(const k in o)f.append(k,o[k]);return f}
+
+let currentUser = { role: "public", display_name: "Public Verifier" };
+async function checkAuth(){
+  try {
+    currentUser = await api("/api/auth/me");
+  } catch(_) {
+    currentUser = { role: "public", display_name: "Public Verifier" };
+  }
+  const badge = $("#user-badge");
+  const btn = $("#auth-btn");
+  const notice = $("#auth-notice");
+  if (currentUser.role !== "public") {
+    badge.innerHTML = `<span class="dot"></span><span>${esc(currentUser.display_name)}</span>`;
+    btn.textContent = "Sign Out";
+    btn.href = "#";
+    btn.onclick = async(e)=>{
+      e.preventDefault();
+      await api("/api/auth/logout", {method:"POST"});
+      window.location.href = "/login";
+    };
+    if (notice) notice.innerHTML = `Signed in as <b>${esc(currentUser.display_name)}</b>. Your confirmation signature and timestamp will be committed to the record.`;
+  } else {
+    badge.innerHTML = `<span class="dot guest"></span><span>Public Verifier (Guest)</span>`;
+    btn.textContent = "Sign In";
+    btn.href = "/login";
+    btn.onclick = null;
+  }
+}
+$("#switch-btn").onclick=async(e)=>{e.preventDefault();try{await fetch("/api/auth/logout",{method:"POST"})}catch(_){}window.location.href="/login"};
+
+$("#readbtn").onclick=async()=>{
+  const f=$("#rf").files[0];if(!f)return;
+  try{
+    const x=await api("/api/extract",{method:"POST",body:fd({file:f})});
+    $("#iss").value=x.issuer;$("#dd").value=x.doc_date;$("#dt").value=x.doc_type;
+    if(x.candidate_name)$("#cand").value=x.candidate_name;
+    const n=$("#exnote");n.hidden=false;
+    n.textContent=`Suggested by ${x.source==="ai"?"AI":"local rules"}. Check each field, including the candidate, before you add the document.`;
+  }catch(e){oops(e)}
+};
+async function loadCandidates(){
+  try{$("#cand-list").innerHTML=(await api("/api/candidates")).map(n=>`<option value="${esc(n)}">`).join("")}catch(_){}
+}
+$("#addbtn").onclick=async()=>{
+  const f=$("#rf").files[0];
+  if(!f){$("#addmsg").textContent="Choose a document first.";return}
+  const cand=$("#cand").value.trim()||"Aarav Kulkarni";
+  try{
+    const r=await api("/api/register",{method:"POST",body:fd({file:f,issuer:$("#iss").value,doc_date:$("#dd").value,doc_type:$("#dt").value,candidate_name:cand})});
+    $("#addmsg").textContent=`Added to batch for ${r.candidate_name} (confirmed by ${r.confirmed_by}).`;
+    $("#rf").value="";["#iss","#dd","#dt"].forEach(x=>$(x).value="");
+    $("#exnote").hidden=true;
+    loadPending();loadCandidates();
+  }catch(e){$("#addmsg").textContent=e.message}
+};
+
+async function loadPending(){const r=(await api("/api/records")).filter(x=>x.status==="pending");$("#pending").innerHTML=r.length?`<table><tr><th>#</th><th>Name</th><th>Candidate</th><th>Issuer</th><th>Confirmed By</th><th>Fingerprint (SHA-256)</th></tr>${r.map(x=>`<tr><td>${x.id}</td><td>${esc(x.name)}</td><td><b>${esc(x.candidate_name)}</b></td><td>${esc(x.issuer)}</td><td><span class="small">${esc(x.confirmed_by||"Registrar")}</span></td><td class="mono">${short(x.doc_hash)}</td></tr>`).join("")}</table>`:'<p class="note">No pending documents. Add one above.</p>'}
+$("#pubbtn").onclick=async()=>{try{const r=await api("/api/publish",{method:"POST"});$("#pubmsg").innerHTML=`Published ${r.batch_id} with ${r.count} documents. Root: <span class="mono">${r.root}</span>`;loadPending()}catch(e){$("#pubmsg").textContent=e.message}};
+async function loadRecords(){const r=await api("/api/records");$("#records").innerHTML=r.length?`<table><tr><th>#</th><th>Name</th><th>Candidate</th><th>Issuer</th><th>Batch</th><th>Audit Stamp</th><th>Fingerprint</th><th></th></tr>${r.map(x=>`<tr><td>${x.id}</td><td>${esc(x.name)}</td><td><b>${esc(x.candidate_name)}</b></td><td>${esc(x.issuer)}<div class="small">${esc(x.doc_type)} ${esc(x.doc_date)}</div></td><td><span class="tag ${x.status==="published"?"pub":""}">${x.batch_id||"pending"}</span></td><td><div class="small"><b>${esc(x.confirmed_by||"Registrar")}</b><br>${esc(x.confirmed_at||"")}</div></td><td class="mono">${short(x.doc_hash)}</td><td>${x.batch_id&&x.can_access?`<a href="/api/file/${x.id}">document</a> · <a href="/api/proof/${x.id}">proof</a> · <a href="#" onclick="chk(${x.id});return false">check stored copy</a>`:(x.batch_id?'<span class="small">contents private</span>':"")}</td></tr>`).join("")}</table>`:'<p class="note">Nothing registered yet. Use the Register tab, or load samples in Audit and demo.</p>'}
+async function chk(id){try{show("verify");render(await api("/api/verify-record/"+id,{method:"POST"}))}catch(e){oops(e)}}
+function render(r,target="#vresult",title=""){$(target).innerHTML=`${title?`<div class="small" style="margin-bottom:4px">${esc(title)}</div>`:""}<div class="verdict ${r.ok?"ok":"bad"}">${r.ok?"Verified":"Rejected"}: ${esc(r.code)}<div class="small" style="font-weight:400;color:inherit">${esc(r.message)}</div></div><div class="panel"><ul class="chain">${r.checks.map(c=>`<li class="${c.status}"><b>${esc(c.name.replace("_"," "))}: ${c.status}</b><span class="small mono">${esc(c.detail)}</span></li>`).join("")}</ul></div>`}
+$("#vbtn").onclick=async()=>{const d=$("#vd").files[0],p=$("#vp").files[0];if(!d||!p){$("#vresult").innerHTML='<div class="hint">Choose both a document and its proof file.</div>';return}try{render(await api("/api/verify",{method:"POST",body:fd({doc:d,proof:p,root:$("#vr").value,anchor:$("#va").value})}))}catch(e){oops(e)}};
+
+/* ---------- candidate: vault + access requests ---------- */
+const STATUS_TAG={pending:'<span class="tag">Pending</span>',approved:'<span class="tag pub">Approved</span>',rejected:'<span class="tag bad">Declined</span>'};
+async function loadVault(){
+  const r=await api("/api/candidate/documents");
+  $("#vault-list").innerHTML=r.length?`<table><tr><th>#</th><th>Document</th><th>Issued by</th><th>Batch</th><th>Shared with</th><th></th></tr>${r.map(x=>`<tr><td>${x.id}</td><td><b>${esc(x.name)}</b><div class="small">${esc(x.doc_type)} ${esc(x.doc_date)} · ${esc(x.issuer)}</div></td><td><div class="small"><b>${esc(x.confirmed_by||"Registrar")}</b><br>${esc(x.confirmed_at||"")}</div></td><td><span class="tag pub">${esc(x.batch_id)}</span></td><td>${x.shared_with.length?x.shared_with.map(v=>`<span class="tag pub">${esc(v)}</span>`).join(" "):'<span class="small">nobody yet</span>'}</td><td><a href="/api/file/${x.id}">document</a> · <a href="/api/proof/${x.id}">proof</a></td></tr>`).join("")}</table>`:'<p class="note">Nothing has been issued in your name yet. Ask your registrar to issue and publish a document to you.</p>';
+  loadRequests().catch(()=>{});
+}
+async function loadRequests(){
+  const r=await api("/api/access/requests");
+  setBadge(r.filter(x=>x.status==="pending").length);
+  const actions=x=>x.status==="pending"?`<button class="btn sm" onclick="respond(${x.id},'approve')">Approve Access</button><button class="btn sm danger" onclick="respond(${x.id},'reject')">Decline</button>`:(x.status==="approved"?`<button class="btn sm alt" onclick="respond(${x.id},'reject')">Revoke access</button>`:"");
+  $("#req-list").innerHTML=r.length?`<table><tr><th>Verifier</th><th>Wants to verify</th><th>Requested</th><th>Status</th><th></th></tr>${r.map(x=>`<tr><td><b>${esc(x.verifier_name)}</b></td><td>${esc(x.doc_name)}<div class="small">${esc(x.doc_type)} ${esc(x.doc_date)} · ${esc(x.issuer)}</div></td><td class="small">${esc(x.requested_at)}</td><td>${STATUS_TAG[x.status]||esc(x.status)}<div class="small">${esc(x.responded_at||"")}</div></td><td>${actions(x)}</td></tr>`).join("")}</table>`:'<p class="note">No access requests yet. When a verifier asks to check one of your documents, it appears here.</p>';
+}
+async function respond(id,action){
+  try{await api("/api/access/respond/"+id,{method:"POST",body:fd({action})})}catch(e){oops(e)}
+  loadRequests().catch(oops);
+  if($("#vault").classList.contains("on"))loadVault().catch(oops);
+}
+
+/* ---------- verifier: directory, request, unlock, verify ---------- */
+function accessCell(x){
+  const s=x.access_status;
+  if(s==="approved")return '<span class="tag pub">Approved</span> <a href="#" onclick="showApproved();return false">Verify &rarr;</a>';
+  if(s==="pending")return '<span class="tag">Waiting for candidate</span>';
+  if(s==="rejected")return `<span class="tag bad">Declined</span> <button class="btn sm alt" onclick="reqAccess(${x.id})">Request again</button>`;
+  return `<button class="btn sm" onclick="reqAccess(${x.id})">Request access</button>`;
+}
+function showApproved(){show("approved")}
+async function loadDirectory(){
+  const r=await api("/api/records");
+  $("#dir").innerHTML=r.length?`<table><tr><th>Candidate</th><th>Document</th><th>Issuer</th><th>Batch</th><th>Access</th></tr>${r.map(x=>`<tr><td><b>${esc(x.candidate_name)}</b></td><td>${esc(x.name)}<div class="small">${esc(x.doc_type)} ${esc(x.doc_date)}</div></td><td>${esc(x.issuer)}</td><td><span class="tag pub">${esc(x.batch_id)}</span></td><td>${accessCell(x)}</td></tr>`).join("")}</table>`:'<p class="note">No published credentials yet. Ask a registrar to publish a batch.</p>';
+}
+async function reqAccess(id){
+  try{await api("/api/access/request",{method:"POST",body:fd({record_id:id})})}catch(e){oops(e)}
+  loadDirectory().catch(oops);
+}
+async function loadApproved(){
+  const r=(await api("/api/records")).filter(x=>x.can_access);
+  $("#appr").innerHTML=r.length?`<table><tr><th>Candidate</th><th>Document</th><th>Batch</th><th>Unlocked files</th><th></th></tr>${r.map(x=>`<tr><td><b>${esc(x.candidate_name)}</b></td><td>${esc(x.name)}<div class="small">${esc(x.doc_type)} ${esc(x.doc_date)} · ${esc(x.issuer)}</div></td><td><span class="tag pub">${esc(x.batch_id)}</span></td><td><a href="/api/file/${x.id}">document</a> · <a href="/api/proof/${x.id}">proof</a></td><td><button class="btn sm" data-name="${esc(x.name)}" onclick="verifyApproved(${x.id},this)">Verify Cryptographically</button></td></tr>`).join("")}</table>`:'<p class="note">Nothing unlocked yet. Request access in the previous tab and wait for the candidate to approve.</p>';
+}
+async function verifyApproved(id,btn){
+  const name=btn.dataset.name;btn.disabled=true;
+  try{
+    const [d,p]=await Promise.all([fetch("/api/file/"+id),fetch("/api/proof/"+id)]);
+    if(!d.ok||!p.ok)throw new Error("Access was withdrawn or is no longer granted for this document.");
+    const doc=new File([await d.blob()],name),proof=new File([await p.blob()],name+".proof.json");
+    render(await api("/api/verify",{method:"POST",body:fd({doc,proof,root:"",anchor:""})}),"#apprres",name);
+  }catch(e){oops(e);loadApproved().catch(()=>{})}
+  finally{btn.disabled=false}
+}
+$("#abtn").onclick=async()=>{let r;try{r=await api("/api/audit",{method:"POST"})}catch(e){oops(e);return}$("#aresult").innerHTML=r.ok?`<div class="verdict ok">No problems found. Log & Consensus: ${esc(r.log)}</div>`:`<div class="verdict bad">${r.findings.length} problem(s) found</div><ul>${r.findings.map(f=>`<li><b>${f.code}</b>: ${esc(f.detail)}</li>`).join("")}</ul>`;loadLog()};
+async function loadLog(){
+  const l=await api("/api/log");
+  const agreeTag = l.agree ? '<span class="tag pub">Dual-Log Consensus: AGREE</span>' : '<span class="tag" style="background:#fee2e2;color:#991b1b">Dual-Log: DIVERGED / TAMPERED</span>';
+  const mirTag = l.mirror_ok ? '<span class="tag pub">Mirror Log: OK</span>' : '<span class="tag" style="background:#fee2e2;color:#991b1b">Mirror Log: INVALID</span>';
+  $("#log-status").innerHTML = `<div>Primary Log: <b>${esc(l.detail)}</b></div><div>${mirTag}</div><div>${agreeTag}</div>`;
+  $("#log").innerHTML=l.entries.length?`<table><tr><th>Seq</th><th>Batch</th><th>Root</th><th>Time</th></tr>${l.entries.map(e=>`<tr><td>${e.seq}</td><td>${e.batch_id}</td><td class="mono">${e.root}</td><td>${e.ts}</td></tr>`).join("")}</table><p class="note">Head hash (save or print as anchor):</p><div class="mono">${l.head}</div>`:'<p class="note">No roots published yet.</p>';
+}
+
+$("#cmpbtn").onclick=async()=>{
+  const rid=$("#cmp-id").value;
+  try{
+    const [naive, pc] = await Promise.all([
+      api("/api/naive-verify/"+rid, {method:"POST"}),
+      api("/api/verify-record/"+rid, {method:"POST"})
+    ]);
+    const naiveFooled = naive.naive_ok && !pc.ok;
+    $("#cmp-result").innerHTML=`
+      <div class="compare-grid">
+        <div class="compare-card">
+          <h3>Naive Architecture <span class="small">(Hash stored in DB)</span></h3>
+          <div class="badge ${naiveFooled ? 'fooled' : (naive.naive_ok ? 'pass' : 'fail')}">
+            ${naiveFooled ? 'FOOLED: PASS (VULNERABLE)' : (naive.naive_ok ? 'PASS' : 'FAIL')}
+          </div>
+          <p class="note">Checks stored file against the hash column in the database.</p>
+          <div class="small mono">DB Hash: ${short(naive.stored_hash)}<br>Computed: ${short(naive.computed_hash)}</div>
+          <div class="hint" style="${naiveFooled ? 'background:#fee2e2;color:#991b1b' : ''}">
+            ${naiveFooled ? '⚠ <b>The database was rewritten!</b> The naive system blindly trusts the DB hash, failing to detect tampering.' : 'Normal status. Stored file hash matches DB hash.'}
+          </div>
+        </div>
+        <div class="compare-card">
+          <h3>ProofChain Architecture <span class="small">(RFC 9162 Merkle + Log)</span></h3>
+          <div class="badge ${pc.ok ? 'pass' : 'caught'}">
+            ${pc.ok ? 'VERIFIED: PASS' : 'CAUGHT: ' + pc.code}
+          </div>
+          <p class="note">Folds cryptographic Merkle proof against the external append-only log.</p>
+          <div class="small mono">Result: ${esc(pc.code)}<br>${esc(pc.message)}</div>
+          <div class="hint" style="${!pc.ok ? 'background:#dcfce7;color:#166534' : ''}">
+            ${!pc.ok ? '✓ <b>Tampering Detected!</b> Even though the custodian altered the database, the external published root remained immutable.' : 'Document cryptographically verified against published Merkle root.'}
+          </div>
+        </div>
+      </div>
+    `;
+  }catch(e){
+    $("#cmp-result").innerHTML=`<div class="hint" style="background:#fee2e2;color:#991b1b">${esc(e.message)}</div>`;
+  }
+};
+
+const dm=m=>$("#dmsg").textContent=m;
+$("#seedbtn").onclick=async()=>{try{const r=await api("/api/demo/seed",{method:"POST"});dm(`Loaded batch ${r.batch_id} (${r.count} documents).`);loadLog()}catch(e){dm(e.message)}};
+$("#atkbtn").onclick=async()=>{try{await api("/api/demo/attack/"+$("#atk").value,{method:"POST"});dm("Done. Now click 'Compare Architectures' or open Registry and use 'check stored copy'.");$("#cmp-id").value=$("#atk").value}catch(e){dm(e.message)}};
+$("#logbtn").onclick=async()=>{try{await api("/api/demo/tamper-log",{method:"POST"});dm("Log edited. Primary and mirror logs now disagree. Run audit or load log to see divergence.");loadLog()}catch(e){dm(e.message)}};
+$("#rstbtn").onclick=async()=>{await api("/api/demo/reset",{method:"POST"});dm("Reset.");loadLog();$("#aresult").innerHTML="";$("#cmp-result").innerHTML=""};
+checkAuth().then(()=>{show(buildTabs());if(currentUser.role==="candidate")loadRequests().catch(()=>{})});
+</script></body></html>
