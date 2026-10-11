@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ProofChain — Cryptographic document integrity verification built on Merkle tree proofs and ledger anchoring.">
+  <title>ProofChain — Cryptographic Document Verification</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+
+    <nav class="top-nav">
+      <a href="index.html" class="nav-logo">PROOFCHAIN</a>
+      <ul class="nav-links">
+        <li><a href="register.html">Register</a></li>
+        <li><a href="batches.html">Batches</a></li>
+        <li><a href="verify.html">Verify</a></li>
+        <li><a href="audit.html">Audit</a></li>
+      </ul>
+    </nav>
+
+    <main class="main-content">
+
+      <section style="padding: 48px 0 36px;">
+        <h1 class="page-title" style="font-size: 2.2rem; margin-bottom: 12px;">
+          Cryptographic Document Registry
+        </h1>
+        <p class="page-subtitle" style="margin-bottom: 32px;">
+          SHA-256 canonical fingerprinting, Merkle tree batching, Ed25519 checkpoint signing, and independent witness anchoring. Client-side provable document integrity without reliance on centralized databases.
+        </p>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <a href="register.html" class="btn">Register Document</a>
+          <a href="verify.html" class="btn btn-outline">Verify Proof Bundle</a>
+        </div>
+      </section>
+
+      <section style="padding: 16px 0 32px;">
+        <p class="section-label">Core Views</p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px;">
+
+          <a href="register.html" class="card" style="text-decoration: none; color: inherit;">
+            <p class="section-label" style="margin-bottom: 6px;">View 1</p>
+            <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 8px;">Registration</h3>
+            <p style="font-size: 0.8rem; color: var(--color-secondary); line-height: 1.5;">
+              Binary/JSON ingestion, canonicalization formats, AI metadata advisory confirmation, and SHA-256 fingerprinting.
+            </p>
+          </a>
+
+          <a href="batches.html" class="card" style="text-decoration: none; color: inherit;">
+            <p class="section-label" style="margin-bottom: 6px;">View 2</p>
+            <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 8px;">Batch Ledger</h3>
+            <p style="font-size: 0.8rem; color: var(--color-secondary); line-height: 1.5;">
+              Checkpoint schema records, Merkle tree DAG drawer, and proof bundle JSON generation for any leaf.
+            </p>
+          </a>
+
+          <a href="verify.html" class="card" style="text-decoration: none; color: inherit;">
+            <p class="section-label" style="margin-bottom: 6px;">View 3</p>
+            <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 8px;">Standalone Verifier</h3>
+            <p style="font-size: 0.8rem; color: var(--color-secondary); line-height: 1.5;">
+              In-browser WebCrypto execution evaluating protocol checks V0 through V6 with failure code diagnostics.
+            </p>
+          </a>
+
+          <a href="audit.html" class="card" style="text-decoration: none; color: inherit;">
+            <p class="section-label" style="margin-bottom: 6px;">View 4</p>
+            <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 8px;">Audit &amp; Tamper Demo</h3>
+            <p style="font-size: 0.8rem; color: var(--color-secondary); line-height: 1.5;">
+              Side-by-side comparison of naive database hash check versus witness-anchored ProofChain with live tamper triggers.
+            </p>
+          </a>
+
+        </div>
+      </section>
+
+      <section style="padding: 16px 0 40px;">
+        <div class="card">
+          <div class="card-header">
+            <h2>Cryptographic Architecture</h2>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+            <div>
+              <p class="section-label">Document Fingerprint</p>
+              <div class="mono" style="padding: 8px 10px; background: var(--color-muted); border-radius: var(--radius); font-size: 0.78rem;">
+                SHA-256(tag || canonical_bytes)
+              </div>
+            </div>
+            <div>
+              <p class="section-label">Leaf Hash</p>
+              <div class="mono" style="padding: 8px 10px; background: var(--color-muted); border-radius: var(--radius); font-size: 0.78rem;">
+                SHA-256(0x00 || fingerprint)
+              </div>
+            </div>
+            <div>
+              <p class="section-label">Interior Node Hash</p>
+              <div class="mono" style="padding: 8px 10px; background: var(--color-muted); border-radius: var(--radius); font-size: 0.78rem;">
+                SHA-256(0x01 || left || right)
+              </div>
+            </div>
+            <div>
+              <p class="section-label">Signed Checkpoint</p>
+              <div class="mono" style="padding: 8px 10px; background: var(--color-muted); border-radius: var(--radius); font-size: 0.78rem;">
+                Ed25519.sign(root || tree_size || ts)
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer style="border-top: 1px solid var(--color-border); padding: 18px 24px; text-align: center;">
+      <span style="font-size: 0.75rem; color: var(--color-secondary);">ProofChain Front-End Functional Specification</span>
+    </footer>
+
+  </div>
+</body>
+</html>

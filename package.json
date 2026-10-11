@@ -1,0 +1,19 @@
+{
+  "name": "proofchain-vertex",
+  "version": "1.0.0",
+  "description": "Cryptographic document integrity verification system built on Merkle tree proofs and ledger anchoring",
+  "main": "dev-server.js",
+  "scripts": {
+    "dev": "node dev-server.js",
+    "start": "node dev-server.js"
+  },
+  "keywords": [
+    "proofchain",
+    "merkle-tree",
+    "webcrypto",
+    "integrity",
+    "verification"
+  ],
+  "author": "",
+  "license": "MIT"
+}
